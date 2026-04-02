@@ -1,0 +1,246 @@
+/* ── Chat Input (Cursor-style) ── */
+
+.ci-wrapper {
+  padding: 10px 12px 12px;
+  flex-shrink: 0;
+}
+
+.ci-box {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-2);
+  border: 1px solid var(--border-md);
+  border-radius: 12px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.ci-box:focus-within {
+  border-color: var(--border-hi);
+  box-shadow: 0 0 0 3px rgba(82,196,247,.08);
+}
+.ci-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ── Textarea ── */
+.ci-textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--t0);
+  padding: 12px 14px 4px;
+  min-height: 22px;
+  max-height: 150px;
+}
+.ci-textarea::placeholder {
+  color: var(--t3);
+}
+
+/* ── Bottom bar (hints + send) ── */
+.ci-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px 6px 12px;
+  gap: 8px;
+}
+
+.ci-hints {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ci-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  color: var(--t3);
+  cursor: pointer;
+  transition: color .15s, background .15s;
+}
+.ci-hint:hover {
+  color: var(--blue);
+  background: var(--blue-d);
+}
+
+.ci-hint-text {
+  font-size: 10.5px;
+  color: var(--t3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Send button ── */
+.ci-send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: var(--bg-4);
+  color: var(--t3);
+  cursor: not-allowed;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.ci-send-active {
+  background: var(--blue);
+  color: #fff;
+  cursor: pointer;
+}
+.ci-send-active:hover {
+  filter: brightness(1.15);
+}
+
+.ci-send-stop {
+  background: var(--blue);
+  color: #fff;
+  cursor: pointer;
+}
+.ci-send-stop:hover {
+  filter: brightness(1.1);
+}
+
+.ci-send-stopping {
+  cursor: wait;
+  opacity: 0.85;
+}
+
+.ci-btn-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: ci-spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+@keyframes ci-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Attachments (files + images) ── */
+.ci-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 8px 12px 0;
+}
+
+.ci-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--t1);
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 5px 2px 7px;
+  max-width: 180px;
+  transition: border-color .15s;
+}
+.ci-chip:hover {
+  border-color: var(--border-md);
+}
+
+.ci-chip-at {
+  color: var(--blue);
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.ci-chip-img .ci-chip-imgicon {
+  color: var(--purple);
+  flex-shrink: 0;
+}
+
+.ci-chip-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ci-chip-rm {
+  background: none;
+  border: none;
+  color: var(--t3);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0 1px;
+  flex-shrink: 0;
+  transition: color .15s;
+}
+.ci-chip-rm:hover {
+  color: var(--red);
+}
+
+/* ── @ Mention popup ── */
+.ci-mention-popup {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--bg-1);
+  border: 1px solid var(--border-md);
+  border-radius: 10px;
+  box-shadow: 0 -4px 20px var(--shadow);
+  z-index: 100;
+  margin-bottom: 6px;
+  padding: 4px;
+}
+
+.ci-mention-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--t1);
+  cursor: pointer;
+  border-radius: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background .1s;
+}
+.ci-mention-item:hover,
+.ci-mention-item.active {
+  background: var(--blue-d);
+  color: var(--blue);
+}
+
+.ci-mention-icon {
+  flex-shrink: 0;
+  color: var(--t3);
+}
+.ci-mention-item.active .ci-mention-icon,
+.ci-mention-item:hover .ci-mention-icon {
+  color: var(--blue);
+}
+
+.ci-mention-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

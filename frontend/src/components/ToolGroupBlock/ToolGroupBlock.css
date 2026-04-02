@@ -1,0 +1,127 @@
+/* Rich tool item rendering */
+.tool-rich-item {
+  border-bottom: 1px solid var(--border);
+}
+.tool-rich-item:last-child { border-bottom: none; }
+
+.tool-rich-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  cursor: pointer;
+  user-select: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  min-height: 28px;
+}
+.tool-rich-head:hover { background: var(--bg-3); }
+
+.tool-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.tool-icon-write { background: var(--amber-d); color: var(--amber); }
+.tool-icon-read  { background: var(--teal-d); color: var(--teal); }
+.tool-icon-exec  { background: var(--green-d); color: var(--green); }
+.tool-icon-search { background: var(--purple-d); color: var(--purple); }
+.tool-icon-mcp   { background: var(--blue-d); color: var(--blue); }
+
+.tool-rich-label {
+  color: var(--t1);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tool-file-path {
+  color: var(--t2);
+  font-size: 10.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 300px;
+  background: var(--bg-3);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+.tool-command-preview {
+  color: var(--green);
+  font-size: 10.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 350px;
+}
+
+.tool-meta {
+  color: var(--t3);
+  font-size: 10px;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.tool-rich-detail {
+  padding: 4px 10px 8px 28px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-2);
+}
+
+/* Code block inside tool items */
+.tool-code-block {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--t1);
+  background: var(--bg-3);
+  border-radius: 4px;
+  padding: 8px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 250px;
+  overflow-y: auto;
+  line-height: 1.5;
+}
+
+/* Terminal block */
+.tool-terminal-block {
+  background: #0d1117;
+  border-radius: 0 0 6px 6px;
+  padding: 8px 12px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  border-top: 1px solid var(--border);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.tool-terminal-cmd {
+  color: #58a6ff;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.tool-terminal-output {
+  color: #c9d1d9;
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.5;
+  margin: 0;
+}
+
+[data-theme="light"] .tool-terminal-block {
+  background: #f6f8fa;
+}
+[data-theme="light"] .tool-terminal-cmd {
+  color: #0969da;
+}
+[data-theme="light"] .tool-terminal-output {
+  color: #24292f;
+}

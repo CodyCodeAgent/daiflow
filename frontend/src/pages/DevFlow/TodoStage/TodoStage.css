@@ -1,0 +1,140 @@
+.todo-wrap {
+  padding: 22px;
+}
+
+.todo-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.count-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--blue-d);
+  color: var(--blue);
+}
+
+.todo-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.todo-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 14px;
+  align-items: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.todo-item:hover {
+  background: var(--bg-3);
+}
+
+.todo-seq {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--bg-4);
+  color: var(--t1);
+  flex-shrink: 0;
+}
+
+.todo-title {
+  font-size: 13px;
+  font-weight: 600;
+  flex: 1;
+}
+
+/* ── Todo Detail Modal ── */
+
+.todo-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(520px, 90vw);
+  max-height: 70vh;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg, 0 8px 32px rgba(0,0,0,0.18));
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.todo-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.todo-modal-seq {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--blue-d);
+  color: var(--blue);
+  flex-shrink: 0;
+}
+
+.todo-modal-title {
+  font-size: 14px;
+  font-weight: 700;
+  flex: 1;
+}
+
+.todo-modal-close {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  font-size: 18px;
+  color: var(--t3);
+  cursor: pointer;
+  border-radius: var(--r);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.todo-modal-close:hover {
+  background: var(--bg-3);
+  color: var(--t1);
+}
+
+.todo-modal-body {
+  padding: 20px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--t2);
+  overflow-y: auto;
+  white-space: pre-wrap;
+}

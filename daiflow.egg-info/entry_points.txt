@@ -1,0 +1,2 @@
+[console_scripts]
+daiflow = daiflow.cli:cli

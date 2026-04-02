@@ -1,0 +1,167 @@
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import Topbar from '../../components/Shell/Topbar'
+import { listProjects, deleteProject, getInitSessions, initProject, InitLayerData } from '../../api'
+import { useLocale } from '../../hooks/useLocale'
+import { useToast } from '../../components/Toast/ToastContext'
+import type { ProjectData } from '../../api'
+import './Projects.css'
+
+type InitStatus = 'none' | 'running' | 'done' | 'partial'
+
+function computeInitStatus(layers: InitLayerData[]): InitStatus {
+  const all = layers.flatMap(l => l.sessions)
+  if (all.length === 0) return 'none'
+  const statuses = all.map((s) => s.status as number)
+  if (statuses.some(s => s <= 1)) return 'running'  // 0=waiting, 1=running
+  if (statuses.every(s => s === 2)) return 'done'
+  return 'partial' // some failed
+}
+
+const STATUS_CLASS: Record<InitStatus, string> = {
+  none: 'kb-none',
+  running: 'kb-running',
+  done: 'kb-done',
+  partial: 'kb-partial',
+}
+
+export default function Projects() {
+  const navigate = useNavigate()
+  const { t } = useLocale()
+  const toast = useToast()
+  const [projects, setProjects] = useState<ProjectData[]>([])
+  const [initStatuses, setInitStatuses] = useState<Record<string, InitStatus>>({})
+  const [reiniting, setReiniting] = useState<Record<string, boolean>>({})
+
+  const STATUS_LABEL: Record<InitStatus, string> = {
+    none: t('projects.status.none'),
+    running: t('projects.status.running'),
+    done: t('projects.status.done'),
+    partial: t('projects.status.partial'),
+  }
+
+  useEffect(() => {
+    listProjects().then(async (list: ProjectData[]) => {
+      setProjects(list)
+      // Fetch all init statuses in parallel instead of sequential forEach
+      const results = await Promise.allSettled(
+        list.map(p => getInitSessions(p.id).then(sessions => ({ id: p.id, status: computeInitStatus(sessions) })))
+      )
+      const statuses: Record<string, InitStatus> = {}
+      for (const result of results) {
+        if (result.status === 'fulfilled') {
+          statuses[result.value.id] = result.value.status
+        }
+      }
+      setInitStatuses(statuses)
+    }).catch(err => console.error('Failed to load projects:', err))
+  }, [])
+
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!confirm(t('projects.delete_confirm'))) return
+    await deleteProject(id)
+    setProjects(prev => prev.filter(p => p.id !== id))
+  }
+
+  const handleReinit = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (reiniting[id]) return
+    setReiniting(prev => ({ ...prev, [id]: true }))
+    setInitStatuses(prev => ({ ...prev, [id]: 'running' }))
+    try {
+      await initProject(id)
+      navigate(`/projects/${id}/init`)
+    } catch (err: any) {
+      toast.error(err.message || t('toast.operation_failed'))
+      setReiniting(prev => ({ ...prev, [id]: false }))
+      setInitStatuses(prev => ({ ...prev, [id]: 'partial' }))
+    }
+  }
+
+  return (
+    <>
+      <Topbar title={t('projects.title')} />
+      <div className="content">
+        <div className="page-header">
+          <div>
+            <h1 className="page-heading">{t('projects.heading')}</h1>
+            <p className="page-sub">{t('projects.sub')}</p>
+          </div>
+        </div>
+        <div className="project-grid">
+          {projects.map(p => {
+            const status = initStatuses[p.id] || 'none'
+            return (
+              <div key={p.id} className="card project-card" onClick={() => navigate(`/tasks?project_id=${p.id}`)}>
+                <div className="project-card-top">
+                  <span className="project-name">{p.name}</span>
+                </div>
+                <p className="project-desc">{p.description}</p>
+                <div className="repo-chips">
+                  {p.repos?.map((r, i) => (
+                    <span key={i} className="repo-chip">
+                      <span className={`dot ${r.repo_type === 'frontend' ? 'dot-fe' : r.repo_type === 'backend' ? 'dot-be' : ''}`} />
+                      {r.repo_type}
+                    </span>
+                  ))}
+                </div>
+                <div className="kb-row">
+                  <div
+                    className={`kb-status ${STATUS_CLASS[status]}`}
+                    onClick={(e) => { e.stopPropagation(); navigate(`/projects/${p.id}/init`) }}
+                    title="View generation process"
+                  >
+                    <span className={`kb-dot ${STATUS_CLASS[status]}`} />
+                    {STATUS_LABEL[status]}
+                  </div>
+                  {status === 'done' || status === 'partial' ? (
+                    <div
+                      className="kb-status kb-view"
+                      onClick={(e) => { e.stopPropagation(); navigate(`/projects/${p.id}/knowledge`) }}
+                      title="View knowledge content"
+                    >
+                      📄 {t('projects.view_knowledge')}
+                    </div>
+                  ) : null}
+                </div>
+                <div className="project-card-foot">
+                  <span className="project-meta">
+                    {t('projects.created')} {p.created_at ? new Date(p.created_at).toLocaleDateString() : ''}
+                  </span>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button
+                      className="btn btn-ghost btn-xs"
+                      onClick={(e) => handleReinit(p.id, e)}
+                      disabled={!!reiniting[p.id] || status === 'running'}
+                      title={t('projects.reinit')}
+                    >
+                      {reiniting[p.id] ? t('projects.reiniting') : t('projects.reinit')}
+                    </button>
+                    <button
+                      className="btn btn-ghost btn-xs"
+                      onClick={(e) => { e.stopPropagation(); navigate(`/projects/${p.id}/edit`) }}
+                    >
+                      {t('projects.edit')}
+                    </button>
+                    <button
+                      className="btn btn-danger btn-xs"
+                      onClick={(e) => handleDelete(p.id, e)}
+                    >
+                      {t('projects.delete')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+
+          <div className="card new-card" onClick={() => navigate('/projects/new')}>
+            <span className="new-icon">+</span>
+            <span className="new-text">{t('projects.new')}</span>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}

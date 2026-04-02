@@ -1,0 +1,73 @@
+.tool-approval {
+  background: var(--amber-d);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: var(--r);
+  padding: 10px 12px;
+  margin: 6px 0;
+}
+
+.tool-approval-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tool-approval-icon {
+  color: var(--amber);
+  font-size: 14px;
+}
+
+.tool-approval-title {
+  color: var(--amber);
+}
+
+.tool-approval-path {
+  margin-bottom: 6px;
+}
+
+.tool-approval-path code {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--t1);
+  background: var(--bg-3);
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+.tool-approval-content {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--t1);
+  background: var(--bg-3);
+  border-radius: 4px;
+  padding: 8px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 8px;
+}
+
+.tool-approval-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.btn-sm {
+  padding: 3px 12px;
+  font-size: 11px;
+}
+
+.btn-danger {
+  background: var(--red-d);
+  color: var(--red);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
+.btn-danger:hover {
+  background: rgba(248, 113, 113, 0.2);
+}

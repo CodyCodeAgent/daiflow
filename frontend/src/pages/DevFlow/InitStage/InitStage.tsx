@@ -1,0 +1,240 @@
+import { useEffect, useState, useMemo, useCallback } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import Topbar from '../../../components/Shell/Topbar'
+import StageProgress from '../../../components/StageProgress/StageProgress'
+import { getTask, getTaskInitSessions, confirmInit, retryTaskInit, type TaskData, type InitSessionData } from '../../../api'
+import { useLocale } from '../../../hooks/useLocale'
+import { useToast } from '../../../components/Toast/ToastContext'
+import { sessionIds } from '../../../utils/sessionIds'
+import type { TranslationKey } from '../../../i18n'
+import SessionLogModal from '../../../components/SessionLogModal/SessionLogModal'
+import { isStageReadonly } from '../../../components/StageLayout/StageLayout'
+import { useWsSync } from '../../../hooks/useWsSync'
+import '../../Projects/ProjectInit.css'
+
+const SESSION_LABELS: Record<string, TranslationKey> = {
+  fetch_code: 'init_stage.fetch_code',
+  sync_skills: 'init_stage.sync_skills',
+  sync_commands: 'init_stage.sync_commands',
+}
+
+const STATUS_CLASSES = ['waiting', 'running', 'done', 'failed']
+
+export default function InitStage() {
+  const { taskId } = useParams()
+  const navigate = useNavigate()
+  const { t } = useLocale()
+  const toast = useToast()
+  const [task, setTask] = useState<TaskData | null>(null)
+  const [sessions, setSessions] = useState<InitSessionData[]>([])
+  const [confirming, setConfirming] = useState(false)
+  const [retrying, setRetrying] = useState(false)
+  const [viewSession, setViewSession] = useState<{ id: string; label: string } | null>(null)
+
+  const loadData = useCallback(async () => {
+    if (!taskId) return []
+    const [taskData, sessionsData] = await Promise.all([
+      getTask(taskId),
+      getTaskInitSessions(taskId),
+    ])
+    setTask(taskData)
+    setSessions(sessionsData)
+    return sessionsData
+  }, [taskId])
+
+  useWsSync({
+    channel: taskId ? sessionIds.taskInitBus(taskId) : null,
+    onEvent: (event) => {
+      if (event.type === 'session_status') {
+        setSessions(prev => prev.map(s =>
+          s.session_id === event.session_id
+            ? { ...s, status: event.status ?? s.status, error: event.error || null, started_at: event.started_at || s.started_at, finished_at: event.finished_at || s.finished_at }
+            : s
+        ))
+      }
+      if (event.type === 'done') {
+        loadData()
+      }
+    },
+    fetchData: async () => {
+      const sessionsData = await loadData()
+      return sessionsData.length > 0 && sessionsData.every(s => s.status === 2 || s.status === 3)
+    },
+  })
+
+  const totalCount = sessions.length
+  const doneCount = sessions.filter(s => s.status === 2).length
+  const hasFailed = sessions.some(s => s.status === 3)
+  const allDone = totalCount > 0 && doneCount === totalCount
+  const progress = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0
+
+  const readonly = task ? isStageReadonly(task.status, 1) : false
+
+  // Elapsed time
+  const startTime = useMemo(() => {
+    const times = sessions.map(s => s.started_at).filter(Boolean) as string[]
+    if (times.length === 0) return null
+    return Math.min(...times.map(st => new Date(st).getTime()))
+  }, [sessions])
+
+  const endTime = useMemo(() => {
+    if (!allDone && !hasFailed) return null
+    const times = sessions.map(s => s.finished_at).filter(Boolean) as string[]
+    if (times.length === 0) return null
+    return Math.max(...times.map(st => new Date(st).getTime()))
+  }, [sessions, allDone, hasFailed])
+
+  const [now, setNow] = useState(Date.now())
+  useEffect(() => {
+    if ((allDone || hasFailed) || !startTime) return
+    const id = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [allDone, hasFailed, startTime])
+
+  const elapsed = useMemo(() => {
+    if (!startTime) return null
+    const end = (allDone || hasFailed) && endTime ? endTime : now
+    const ms = end - startTime
+    if (ms < 0) return null
+    const secs = Math.floor(ms / 1000)
+    const m = Math.floor(secs / 60)
+    const s = secs % 60
+    return m > 0 ? `${m}m ${s}s` : `${s}s`
+  }, [startTime, endTime, allDone, hasFailed, now])
+
+  const handleConfirm = async () => {
+    if (!taskId || confirming) return
+    setConfirming(true)
+    try {
+      await confirmInit(taskId)
+      navigate(`/devflow/${taskId}/plan`)
+    } catch (err: any) {
+      toast.error(err.message || t('toast.operation_failed'))
+      setConfirming(false)
+    }
+  }
+
+  const handleRetry = async () => {
+    if (!taskId || retrying) return
+    setRetrying(true)
+    try {
+      await retryTaskInit(taskId)
+      await loadData()
+    } catch (err: any) {
+      toast.error(err.message || t('toast.operation_failed'))
+    } finally {
+      setRetrying(false)
+    }
+  }
+
+  const getSessionKey = (sessionId: string): string => {
+    const parts = sessionId.split(':')
+    return parts[parts.length - 1]
+  }
+
+  const statusKeys: TranslationKey[] = ['init.status.waiting', 'init.status.running', 'init.status.done', 'init.status.failed']
+
+  return (
+    <>
+    <div className="stage-page">
+      <Topbar
+        title={task?.name || ''}
+        branch={task?.branch}
+        taskStatus={task?.status}
+        backTo="/tasks"
+        backLabel={t('nav.tasks')}
+      />
+      <StageProgress taskId={taskId!} currentStage={1} taskStatus={task?.status} />
+      <div className="content">
+        <div className="init-page">
+          <div className="init-inner">
+            <div className="init-header">
+              <div className="init-title">
+                {t('init_stage.title')}
+                <span className={`tag ${allDone ? 'tag-green' : hasFailed ? 'tag-red' : 'tag-amber'}`}>
+                  {allDone ? t('init_stage.completed') : hasFailed ? t('init_stage.failed') : t('init_stage.in_progress')}
+                </span>
+              </div>
+              <p className="init-desc">
+                {t('init_stage.desc')}
+                {elapsed && <span className="init-elapsed">{elapsed}</span>}
+              </p>
+            </div>
+
+            {totalCount > 0 && (
+              <div className="progress-strip">
+                <span className="progress-count">{doneCount}/{totalCount}</span>
+                <div className="progress-bar">
+                  <div className="progress-fill" style={{ width: `${progress}%` }} />
+                </div>
+              </div>
+            )}
+
+            <div className="pipeline">
+              {sessions.map((s, i) => {
+                const key = getSessionKey(s.session_id)
+                const labelKey = SESSION_LABELS[key]
+                const label = labelKey ? t(labelKey) : key
+                const statusClass = STATUS_CLASSES[s.status] || ''
+
+                return (
+                  <div key={s.session_id} className="pipeline-layer">
+                    <div className={`layer-node ${statusClass}`}>
+                      {t('init_stage.title')} {i + 1}
+                    </div>
+                    <div className="layer-children">
+                      <div
+                        className={`know-item ${statusClass} ${s.status > 0 ? 'clickable' : ''}`}
+                        onClick={() => s.status > 0 && setViewSession({ id: s.session_id, label })}
+                      >
+                        <div className="know-icon">
+                          {s.status === 2 ? '✓' : s.status === 1 ? <span className="spinner" /> : s.status === 3 ? '✗' : '○'}
+                        </div>
+                        <div className="know-info">
+                          <div className="know-name">{label}</div>
+                          <div className="know-desc">{key}</div>
+                        </div>
+                        <div className="know-status">{t(statusKeys[s.status])}</div>
+                      </div>
+                    </div>
+                    {i < sessions.length - 1 && <div className="layer-connector" />}
+                  </div>
+                )
+              })}
+            </div>
+
+            {!readonly && (
+              <div className="init-footer">
+                <div style={{ flex: 1 }} />
+                {hasFailed && (
+                  <button
+                    className="btn btn-secondary"
+                    disabled={retrying}
+                    onClick={handleRetry}
+                  >
+                    {retrying ? '...' : t('init_stage.retry')}
+                  </button>
+                )}
+                <button
+                  className="btn btn-primary"
+                  disabled={!allDone || confirming}
+                  onClick={handleConfirm}
+                >
+                  {confirming ? '...' : t('init_stage.confirm')}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+      {viewSession && (
+        <SessionLogModal
+          sessionId={viewSession.id}
+          label={viewSession.label}
+          onClose={() => setViewSession(null)}
+        />
+      )}
+    </>
+  )
+}
