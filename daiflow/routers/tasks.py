@@ -588,3 +588,39 @@ async def get_task_artifact(
         return {"content": task.spec_doc, "exists": True}
 
     return {"content": "", "exists": False}
+
+
+# ── Task-Skill associations ──
+
+
+@router.get("/{task_id}/skills")
+async def get_task_skills(task_id: str, db: AsyncSession = Depends(get_db)):
+    """Get all skills for a task: project skills + extra skills."""
+    from daiflow.schemas import SkillBrief
+    from daiflow.services import skill_service
+    task = await _get_task_or_404(db, task_id)
+    project_skills = await skill_service.get_project_skills(db, task.project_id)
+    extra_skills = await skill_service.get_task_extra_skills(db, task_id)
+    return {
+        "project_skills": [SkillBrief.model_validate(s) for s in project_skills],
+        "extra_skills": [SkillBrief.model_validate(s) for s in extra_skills],
+    }
+
+
+@router.post("/{task_id}/skills/{skill_id}")
+async def add_task_skill(task_id: str, skill_id: str, db: AsyncSession = Depends(get_db)):
+    """Add an extra skill to this task."""
+    from daiflow.services import skill_service
+    await _get_task_or_404(db, task_id)
+    await skill_service.get_skill(db, skill_id)  # ensure skill exists
+    await skill_service.add_task_skill(db, task_id, skill_id)
+    return {"ok": True}
+
+
+@router.delete("/{task_id}/skills/{skill_id}")
+async def remove_task_skill(task_id: str, skill_id: str, db: AsyncSession = Depends(get_db)):
+    """Remove an extra skill from this task."""
+    from daiflow.services import skill_service
+    await _get_task_or_404(db, task_id)
+    await skill_service.remove_task_skill(db, task_id, skill_id)
+    return {"ok": True}

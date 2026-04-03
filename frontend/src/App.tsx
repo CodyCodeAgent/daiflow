@@ -15,6 +15,7 @@ import CodingStage from './pages/DevFlow/CodingStage/CodingStage'
 import ReviewStage from './pages/DevFlow/ReviewStage/ReviewStage'
 import Debug from './pages/Debug/Debug'
 import McpServers from './pages/McpServers/McpServers'
+import Skills from './pages/Skills/Skills'
 import DevFlowGuard from './components/DevFlowGuard/DevFlowGuard'
 import StageErrorBoundary from './components/StageErrorBoundary/StageErrorBoundary'
 import { checkSettings } from './api'
@@ -91,6 +92,7 @@ export default function App() {
             <Route path="/devflow/:taskId/todo" element={<SettingsGuard><StageErrorBoundary><DevFlowGuard stagePath="todo"><TodoStage /></DevFlowGuard></StageErrorBoundary></SettingsGuard>} />
             <Route path="/devflow/:taskId/coding" element={<SettingsGuard><StageErrorBoundary><DevFlowGuard stagePath="coding"><CodingStage /></DevFlowGuard></StageErrorBoundary></SettingsGuard>} />
             <Route path="/devflow/:taskId/review" element={<SettingsGuard><StageErrorBoundary><DevFlowGuard stagePath="review"><ReviewStage /></DevFlowGuard></StageErrorBoundary></SettingsGuard>} />
+            <Route path="/skills" element={<SettingsGuard><Skills /></SettingsGuard>} />
             <Route path="/mcp" element={<SettingsGuard><McpServers /></SettingsGuard>} />
             <Route path="/debug" element={<SettingsGuard><Debug /></SettingsGuard>} />
             <Route path="/" element={<Navigate to="/projects" replace />} />

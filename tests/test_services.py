@@ -183,9 +183,9 @@ class TestStartCoding:
 
 
 class TestSkillService:
-    def test_sync_skills_no_source(self):
-        """When project skills don't exist, create empty directory."""
-        from daiflow.services.skill_service import get_task_dir, sync_skills_to_task
+    def test_legacy_sync_no_source(self):
+        """When project skills don't exist, legacy sync creates empty directory."""
+        from daiflow.services.skill_service import _legacy_sync
 
         with tempfile.TemporaryDirectory() as tmpdir:
             import os
@@ -200,7 +200,7 @@ class TestSkillService:
             import daiflow.services.skill_service as ss
             importlib.reload(ss)
 
-            ss.sync_skills_to_task("proj_1", "task_1")
+            ss._legacy_sync("proj_1", "task_1")
 
             task_skills = ss.get_task_skills_dir("task_1")
             assert task_skills.exists()

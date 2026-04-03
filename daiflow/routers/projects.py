@@ -313,3 +313,35 @@ async def get_project_knowledge(project_id: str, db: AsyncSession = Depends(get_
     return {"project_id": project_id, "files": files}
 
 
+# ── Project-Skill associations ──
+
+
+@router.get("/{project_id}/skills")
+async def get_project_skills(project_id: str, db: AsyncSession = Depends(get_db)):
+    """List skills linked to this project."""
+    from daiflow.schemas import SkillBrief
+    from daiflow.services import skill_service
+    await _get_project_or_404(db, project_id)
+    skills = await skill_service.get_project_skills(db, project_id)
+    return [SkillBrief.model_validate(s) for s in skills]
+
+
+@router.post("/{project_id}/skills/{skill_id}")
+async def link_project_skill(project_id: str, skill_id: str, db: AsyncSession = Depends(get_db)):
+    """Link an existing skill to this project."""
+    from daiflow.services import skill_service
+    await _get_project_or_404(db, project_id)
+    await skill_service.get_skill(db, skill_id)  # ensure skill exists
+    await skill_service.link_skill_to_project(db, project_id, skill_id)
+    return {"ok": True}
+
+
+@router.delete("/{project_id}/skills/{skill_id}")
+async def unlink_project_skill(project_id: str, skill_id: str, db: AsyncSession = Depends(get_db)):
+    """Unlink a skill from this project."""
+    from daiflow.services import skill_service
+    await _get_project_or_404(db, project_id)
+    await skill_service.unlink_skill_from_project(db, project_id, skill_id)
+    return {"ok": True}
+
+

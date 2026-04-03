@@ -363,3 +363,58 @@ class RunnerConfigResponse(_ORMBase):
 
 class DefaultRunnerUpdate(BaseModel):
     runner_id: str
+
+
+# ── Skill Center ──
+
+
+class SkillCreate(BaseModel):
+    source_type: Literal["project", "manual", "external"] = "manual"
+    source_id: str = "0"
+    name: str
+    description: str = ""
+    content: str = ""
+
+    @field_validator("name")
+    @classmethod
+    def not_empty(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Skill name cannot be empty")
+        return v.strip()
+
+
+class SkillUpdate(BaseModel):
+    description: str | None = None
+    content: str | None = None
+
+
+class SkillResponse(_ORMBase):
+    id: str
+    source_type: str
+    source_id: str
+    name: str
+    description: str
+    content: str
+    created_at: str | None = None
+    updated_at: str | None = None
+
+    @field_validator("created_at", "updated_at", mode="before")
+    @classmethod
+    def serialize_datetime(cls, v):
+        return _serialize_dt(v)
+
+
+class SkillBrief(_ORMBase):
+    """Lightweight response without content, for list views."""
+    id: str
+    source_type: str
+    source_id: str
+    name: str
+    description: str
+    created_at: str | None = None
+    updated_at: str | None = None
+
+    @field_validator("created_at", "updated_at", mode="before")
+    @classmethod
+    def serialize_datetime(cls, v):
+        return _serialize_dt(v)

@@ -305,7 +305,8 @@ class TestInitTaskTransition:
         await db_session.commit()
         task_id = t.id
 
-        with patch("daiflow.services.task_service.sync_skills_to_task"):
+        async def mock_sync(*a, **kw): return 0
+        with patch("daiflow.services.skill_service.sync_skills_to_task", side_effect=mock_sync):
             from daiflow.services.task_service import init_task
 
             from contextlib import asynccontextmanager

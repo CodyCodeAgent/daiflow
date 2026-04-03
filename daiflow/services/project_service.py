@@ -185,6 +185,30 @@ async def _run_knowledge_task(
         async with agent_runner:
             await session_runner.run(task_db, session_id, prompt, extra_channels=[project_bus], language=lang)
 
+        # Ingest generated SKILL.md into Skill Center DB
+        if project_id:
+            await _ingest_skill_file(task_db, project_id, knowledge_type, skills_dir / "SKILL.md")
+
+
+async def _ingest_skill_file(db, project_id: str, knowledge_type: str, skill_file: Path):
+    """Read a generated SKILL.md file and push it to the Skill Center DB."""
+    try:
+        if not skill_file.exists():
+            return
+        content = skill_file.read_text(encoding="utf-8")
+        from daiflow.services.skill_service import parse_skill_md, upsert_skill
+        from daiflow.schemas import SkillCreate
+        name, description, body = parse_skill_md(content)
+        await upsert_skill(db, SkillCreate(
+            source_type="project",
+            source_id=project_id,
+            name=name or knowledge_type,
+            description=description,
+            content=body,
+        ))
+    except Exception:
+        logger.warning("Failed to ingest skill %s for project %s", knowledge_type, project_id, exc_info=True)
+
 
 async def _run_layer(
     layer_sessions: list,

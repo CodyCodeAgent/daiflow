@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback, Fragment } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import Topbar from '../../components/Shell/Topbar'
-import { listTasks, createTask, deleteTask, listProjects, uploadPrdImage, listRunners } from '../../api'
-import type { RunnerConfigData } from '../../api'
+import { listTasks, createTask, deleteTask, listProjects, uploadPrdImage, listRunners, listSkills, getProjectSkills, addTaskSkill } from '../../api'
+import type { RunnerConfigData, SkillBriefData } from '../../api'
 import { useLocale } from '../../hooks/useLocale'
 import { STATUS_TAGS, getStageFromStatus, getDevFlowPath } from '../../utils/taskStages'
 import { useToast } from '../../components/Toast/ToastContext'
@@ -42,11 +42,27 @@ export default function Tasks() {
   const [runners, setRunners] = useState<RunnerConfigData[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Skill selection for new task
+  const [projectSkills, setProjectSkills] = useState<SkillBriefData[]>([])
+  const [allSkills, setAllSkills] = useState<SkillBriefData[]>([])
+  const [extraSkillIds, setExtraSkillIds] = useState<Set<string>>(new Set())
+  const [taskSkillSearch, setTaskSkillSearch] = useState('')
+
   useEffect(() => {
     listTasks(projectId).then(setTasks).catch(err => console.error('Failed to load tasks:', err))
     listProjects().then(setProjects).catch(err => console.error('Failed to load projects:', err))
     listRunners().then(setRunners).catch(err => console.error('Failed to load runners:', err))
+    listSkills().then(setAllSkills).catch(() => {})
   }, [projectId])
+
+  // Load project skills when project is selected
+  useEffect(() => {
+    if (taskProjectId) {
+      getProjectSkills(taskProjectId).then(setProjectSkills).catch(() => setProjectSkills([]))
+    } else {
+      setProjectSkills([])
+    }
+  }, [taskProjectId])
 
   // Cleanup object URLs on unmount only (use ref to avoid stale closure)
   const prdImagesRef = useRef(prdImages)
@@ -117,6 +133,11 @@ export default function Tasks() {
       // Upload PRD images after task creation
       if (prdImages.length > 0) {
         await Promise.all(prdImages.map(img => uploadPrdImage(task.id, img.file)))
+      }
+
+      // Link extra skills
+      if (extraSkillIds.size > 0) {
+        await Promise.all(Array.from(extraSkillIds).map(sid => addTaskSkill(task.id, sid)))
       }
 
       setShowDrawer(false)
@@ -270,6 +291,62 @@ export default function Tasks() {
                           <option key={r.id} value={r.id}>{r.name}</option>
                         ))}
                       </select>
+                    </div>
+                  )}
+
+                  {/* Skill selection */}
+                  {taskProjectId && (
+                    <div className="field" style={{ marginTop: 12 }}>
+                      <label className="field-label">{t('tasks.skills_label')}</label>
+                      {projectSkills.length > 0 && (
+                        <div className="skill-pills" style={{ marginBottom: 8 }}>
+                          {projectSkills.map(s => (
+                            <span key={s.id} className="tag tag-purple" style={{ opacity: 0.7 }}>{s.name}</span>
+                          ))}
+                        </div>
+                      )}
+                      {projectSkills.length === 0 && <div style={{ fontSize: 12, color: 'var(--t3)', marginBottom: 6 }}>{t('tasks.no_project_skills')}</div>}
+                      <input
+                        className="input"
+                        placeholder={t('tasks.extra_skills_placeholder')}
+                        value={taskSkillSearch}
+                        onChange={e => setTaskSkillSearch(e.target.value)}
+                      />
+                      {taskSkillSearch.trim() && (
+                        <div className="skill-search-results" style={{ marginTop: 4, marginBottom: 8 }}>
+                          {allSkills
+                            .filter(s => !projectSkills.some(ps => ps.id === s.id) && !extraSkillIds.has(s.id))
+                            .filter(s => s.name.toLowerCase().includes(taskSkillSearch.toLowerCase()))
+                            .slice(0, 8)
+                            .map(s => (
+                              <div key={s.id} className="skill-search-item" onClick={() => {
+                                setExtraSkillIds(new Set([...extraSkillIds, s.id]))
+                                setTaskSkillSearch('')
+                              }}>
+                                <strong>{s.name}</strong>
+                                {s.description && <span className="skill-search-desc">{s.description}</span>}
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                      {extraSkillIds.size > 0 && (
+                        <div className="skill-pills" style={{ marginTop: 4 }}>
+                          {Array.from(extraSkillIds).map(id => {
+                            const s = allSkills.find(sk => sk.id === id)
+                            if (!s) return null
+                            return (
+                              <span key={id} className="tag tag-teal">
+                                {s.name}
+                                <span style={{ cursor: 'pointer', marginLeft: 6 }} onClick={() => {
+                                  const next = new Set(extraSkillIds)
+                                  next.delete(id)
+                                  setExtraSkillIds(next)
+                                }}>x</span>
+                              </span>
+                            )
+                          })}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

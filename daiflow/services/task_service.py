@@ -10,7 +10,7 @@ from daiflow.exceptions import InvalidStateError
 from daiflow.models import Project, ProjectRepo, Session, SessionStatus, Task, TaskStatus, Todo, TodoStatus
 from daiflow.services.git_service import checkout_branch, get_head_hash
 from daiflow.services.project_service import repo_dir_name
-from daiflow.services.skill_service import get_project_dir, get_task_dir, sync_skills_to_task
+from daiflow.services.skill_service import get_project_dir, get_task_dir
 from daiflow.workflow import TaskWorkflow, TodoWorkflow
 from daiflow.session_ids import (
     task_init_bus,
@@ -142,12 +142,13 @@ async def _do_fetch_code(db: AsyncSession, session_id: str, *, task_id: str, pro
 
 
 async def _do_sync_skills(db: AsyncSession, session_id: str, *, task_id: str, project_id: str):
-    """Subtask: sync project skills to task directory."""
+    """Subtask: sync project skills to task directory (DB-backed with legacy fallback)."""
     from daiflow.session_runner import append_log
+    from daiflow.services.skill_service import sync_skills_to_task
 
-    sync_skills_to_task(project_id, task_id)
+    count = await sync_skills_to_task(db, project_id, task_id)
     from daiflow.config import utc_iso
-    await append_log(session_id, {"type": "text_delta", "ts": utc_iso(datetime.now(timezone.utc)), "content": "✓ Synced project skills to task\n"})
+    await append_log(session_id, {"type": "text_delta", "ts": utc_iso(datetime.now(timezone.utc)), "content": f"✓ Synced {count} skill(s) to task\n"})
 
 
 async def init_task(task_id: str, ws_manager: WSManager | None = None):

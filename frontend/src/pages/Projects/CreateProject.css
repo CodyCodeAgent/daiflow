@@ -95,6 +95,40 @@
   margin-bottom: 16px;
 }
 
+.skill-search-results {
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.skill-search-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.skill-search-item:last-child {
+  border-bottom: none;
+}
+
+.skill-search-item:hover {
+  background: var(--blue-d, rgba(59, 130, 246, 0.06));
+}
+
+.skill-search-desc {
+  font-size: 12px;
+  color: var(--t2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .form-footer {
   display: flex;
   justify-content: flex-end;
