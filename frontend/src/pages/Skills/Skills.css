@@ -100,6 +100,18 @@
   background: var(--purple-d, rgba(168, 85, 247, 0.1));
 }
 
+.skill-project-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: var(--blue-d, rgba(59, 130, 246, 0.06));
+  border: 1px solid var(--blue);
+  border-radius: var(--r2);
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
 .skill-empty {
   font-size: 13px;
   color: var(--t2);

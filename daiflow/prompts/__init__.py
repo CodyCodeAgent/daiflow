@@ -110,70 +110,82 @@ TODO_CHAT_PREFIX = (
 
 # ── Project knowledge prompts ──
 
+_SAVE_SKILL_INSTRUCTION = (
+    "When your analysis is complete, call the `save_skill` tool to save your output. "
+    "Pass the skill name, a one-line description, and the full Markdown content as separate arguments."
+)
+
 KNOWLEDGE_PROMPTS = {
     "frontend-structure": (
         "You have access to the following repositories:\n{repos_context}\n\n"
         "Analyze the frontend repositories and generate a comprehensive skill document about the frontend directory structure. "
-        "Cover: directory organization, module responsibilities, naming conventions, and architectural patterns. "
-        "Write the output to {output_path}/SKILL.md in Agent Skills format with YAML frontmatter "
-        "(name: frontend-structure, description: Frontend directory structure analysis, user-invocable: false)."
+        "Cover: directory organization, module responsibilities, naming conventions, and architectural patterns.\n\n"
+        + _SAVE_SKILL_INSTRUCTION + "\n"
+        "Use name='frontend-structure', description='Frontend directory structure analysis'."
     ),
     "backend-structure": (
         "You have access to the following repositories:\n{repos_context}\n\n"
         "Analyze the backend repositories and generate a comprehensive skill document about the backend directory structure. "
-        "Cover: directory organization, module responsibilities, naming conventions, and architectural patterns. "
-        "Write the output to {output_path}/SKILL.md in Agent Skills format with YAML frontmatter "
-        "(name: backend-structure, description: Backend directory structure analysis, user-invocable: false)."
+        "Cover: directory organization, module responsibilities, naming conventions, and architectural patterns.\n\n"
+        + _SAVE_SKILL_INSTRUCTION + "\n"
+        "Use name='backend-structure', description='Backend directory structure analysis'."
     ),
     "business-flow": (
         "You have access to the following repositories:\n{repos_context}\n\n"
         "Analyze the repositories and generate a comprehensive skill document about business flows. "
-        "Cover: key user flows per module, state transitions, and data flow patterns. "
-        "Write the output to {output_path}/SKILL.md in Agent Skills format with YAML frontmatter "
-        "(name: business-flow, description: Business flow analysis per module, user-invocable: false)."
+        "Cover: key user flows per module, state transitions, and data flow patterns.\n\n"
+        + _SAVE_SKILL_INSTRUCTION + "\n"
+        "Use name='business-flow', description='Business flow analysis per module'."
     ),
     "component-usage": (
         "You have access to the following repositories:\n{repos_context}\n\n"
         "Analyze the frontend repositories and generate a comprehensive skill document about component usage. "
-        "Cover: shared components, usage patterns, props interfaces, and composition patterns. "
-        "Write the output to {output_path}/SKILL.md in Agent Skills format with YAML frontmatter "
-        "(name: component-usage, description: Frontend component structure and reuse patterns, user-invocable: false)."
+        "Cover: shared components, usage patterns, props interfaces, and composition patterns.\n\n"
+        + _SAVE_SKILL_INSTRUCTION + "\n"
+        "Use name='component-usage', description='Frontend component structure and reuse patterns'."
     ),
     "module-overview": (
         "You have access to the following repositories:\n{repos_context}\n\n"
         "Analyze all repositories and generate a comprehensive skill document about module breakdown. "
-        "Cover: all modules across frontend and backend, their responsibilities and boundaries. "
-        "Write the output to {output_path}/SKILL.md in Agent Skills format with YAML frontmatter "
-        "(name: module-overview, description: Module breakdown and descriptions, user-invocable: false)."
+        "Cover: all modules across frontend and backend, their responsibilities and boundaries.\n\n"
+        + _SAVE_SKILL_INSTRUCTION + "\n"
+        "Use name='module-overview', description='Module breakdown and descriptions'."
     ),
     "api-interaction": (
         "You have access to the following repositories:\n{repos_context}\n\n"
         "Analyze all repositories and generate a comprehensive skill document about API interactions. "
-        "Cover: API endpoints, request/response patterns, frontend-backend integration points. "
-        "Write the output to {output_path}/SKILL.md in Agent Skills format with YAML frontmatter "
-        "(name: api-interaction, description: Frontend-backend API interaction relationships, user-invocable: false)."
+        "Cover: API endpoints, request/response patterns, frontend-backend integration points.\n\n"
+        + _SAVE_SKILL_INSTRUCTION + "\n"
+        "Use name='api-interaction', description='Frontend-backend API interaction relationships'."
     ),
     "data-entity": (
         "You have access to the following repositories:\n{repos_context}\n\n"
         "Analyze all repositories and generate a comprehensive skill document about data entities. "
-        "Cover: data models, database schemas, data flow patterns, and entity relationships. "
-        "Write the output to {output_path}/SKILL.md in Agent Skills format with YAML frontmatter "
-        "(name: data-entity, description: Data entities and data flows per module, user-invocable: false)."
+        "Cover: data models, database schemas, data flow patterns, and entity relationships.\n\n"
+        + _SAVE_SKILL_INSTRUCTION + "\n"
+        "Use name='data-entity', description='Data entities and data flows per module'."
     ),
     "dependencies": (
         "You have access to the following repositories:\n{repos_context}\n\n"
         "Analyze all repositories and generate a comprehensive skill document about dependencies. "
-        "Cover: external dependencies, internal module dependencies, version requirements. "
-        "Write the output to {output_path}/SKILL.md in Agent Skills format with YAML frontmatter "
-        "(name: dependencies, description: Downstream dependencies per module, user-invocable: false)."
+        "Cover: external dependencies, internal module dependencies, version requirements.\n\n"
+        + _SAVE_SKILL_INSTRUCTION + "\n"
+        "Use name='dependencies', description='Downstream dependencies per module'."
     ),
 }
 
-PROJECT_MD_PROMPT = (
-    "Read all SKILL.md files under {output_path}/skills/ directory (each subdirectory contains one SKILL.md). "
-    "Generate a project.md index file that summarizes all skills and serves as a knowledge base entry point. "
-    "Write the output to {output_path}/project.md."
+PROJECT_SUMMARY_PROMPT = (
+    "You are given a set of project knowledge skills generated from code analysis.\n\n"
+    "## Existing Skills\n{skills_content}\n\n"
+    "## Instructions\n"
+    "Generate a project summary that serves as a knowledge base entry point. "
+    "Summarize each skill's key insights and how they relate to the overall architecture.\n\n"
+    + _SAVE_SKILL_INSTRUCTION + "\n"
+    "Use name='project-summary', description='Project knowledge base index and summary'."
 )
+
+# Keep old name as alias for backward compatibility in imports
+PROJECT_MD_PROMPT = PROJECT_SUMMARY_PROMPT
 
 # ── Spec / Plan / Todo prompts ──
 
@@ -225,15 +237,16 @@ REVIEW_CHAT_PREFIX = (
 
 CONSTITUTION_PROMPT_TEMPLATE = (
     "You are a senior architect. Based on the project knowledge and generated skills, "
-    "create a concise `constitution.md` that captures the project's core development principles.\n\n"
-    "## Context\n"
-    "Read `project.md` and all skill files under `skills/` in the current working directory.\n\n"
+    "create a concise constitution that captures the project's core development principles.\n\n"
+    "## Project Knowledge\n{skills_content}\n\n"
     "## Instructions\n"
-    "Write a constitution document to `{output_path}/constitution.md` that includes:\n"
+    "Create a constitution document that includes:\n"
     "1. **Tech Stack** — Core technologies, frameworks, and libraries in use\n"
     "2. **Architecture Principles** — Key design decisions and patterns\n"
     "3. **Code Conventions** — Naming, file organization, style rules\n"
     "4. **Module Boundaries** — What each module owns and what it must NOT do\n"
     "5. **Integration Rules** — How frontend/backend communicate, API contracts\n\n"
-    "Keep it concise (under 500 lines). This file will be injected into every AI coding session."
+    "Keep it concise (under 500 lines). This will be injected into every AI coding session.\n\n"
+    + _SAVE_SKILL_INSTRUCTION + "\n"
+    "Use name='constitution', description='Core development principles and conventions'."
 )

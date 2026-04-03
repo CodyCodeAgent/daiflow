@@ -118,8 +118,8 @@ export default function Projects() {
                   {status === 'done' || status === 'partial' ? (
                     <div
                       className="kb-status kb-view"
-                      onClick={(e) => { e.stopPropagation(); navigate(`/projects/${p.id}/knowledge`) }}
-                      title="View knowledge content"
+                      onClick={(e) => { e.stopPropagation(); navigate(`/skills?project_id=${p.id}`) }}
+                      title="View project skills"
                     >
                       📄 {t('projects.view_knowledge')}
                     </div>

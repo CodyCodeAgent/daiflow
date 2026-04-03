@@ -279,37 +279,33 @@ async def get_init_sessions(project_id: str, db: AsyncSession = Depends(get_db))
 
 @router.get("/{project_id}/knowledge")
 async def get_project_knowledge(project_id: str, db: AsyncSession = Depends(get_db)):
-    """Get project knowledge files (project.md + skills)."""
-    project = await _get_project_or_404(db, project_id)
+    """Get project knowledge — reads from Skill Center DB, with file fallback for legacy data."""
+    from daiflow.services import skill_service
+    await _get_project_or_404(db, project_id)
 
-    project_dir = PROJECTS_DIR / project_id
+    skills = await skill_service.get_project_skills(db, project_id)
     files: list[dict] = []
 
-    def _read_knowledge():
-        result = []
-        # project.md
-        project_md = project_dir / "project.md"
-        if project_md.exists():
-            result.append({
-                "name": "project.md",
-                "type": "index",
-                "content": project_md.read_text(encoding="utf-8"),
-            })
+    if skills:
+        for s in skills:
+            files.append({"name": s.name, "type": "skill", "content": s.content})
+    else:
+        # Legacy file fallback
+        project_dir = PROJECTS_DIR / project_id
+        def _read_legacy():
+            result = []
+            project_md = project_dir / "project.md"
+            if project_md.exists():
+                result.append({"name": "project.md", "type": "index", "content": project_md.read_text(encoding="utf-8")})
+            skills_dir = project_dir / "skills"
+            if skills_dir.exists():
+                for sd in sorted(skills_dir.iterdir()):
+                    if sd.is_dir():
+                        sf = sd / "SKILL.md"
+                        result.append({"name": sd.name, "type": "skill", "content": sf.read_text(encoding="utf-8") if sf.exists() else ""})
+            return result
+        files = await asyncio.to_thread(_read_legacy)
 
-        # skills
-        skills_dir = project_dir / "skills"
-        if skills_dir.exists():
-            for skill_dir in sorted(skills_dir.iterdir()):
-                if skill_dir.is_dir():
-                    skill_file = skill_dir / "SKILL.md"
-                    result.append({
-                        "name": skill_dir.name,
-                        "type": "skill",
-                        "content": skill_file.read_text(encoding="utf-8") if skill_file.exists() else "",
-                    })
-        return result
-
-    files = await asyncio.to_thread(_read_knowledge)
     return {"project_id": project_id, "files": files}
 
 

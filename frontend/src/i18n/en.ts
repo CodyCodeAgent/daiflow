@@ -467,6 +467,9 @@ const en = {
   'skills.source_project': 'Project',
   'skills.source_manual': 'Manual',
   'skills.source_external': 'External',
+  'skills.back_to_projects': 'Projects',
+  'skills.showing_project': 'Showing skills for project',
+  'skills.show_all': 'Show All',
 
   // Toast
   'toast.operation_failed': 'Operation failed',

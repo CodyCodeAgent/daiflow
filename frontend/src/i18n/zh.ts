@@ -469,6 +469,9 @@ const zh: Record<TranslationKey, string> = {
   'skills.source_project': '项目',
   'skills.source_manual': '手动',
   'skills.source_external': '外部',
+  'skills.back_to_projects': '项目',
+  'skills.showing_project': '当前项目技能',
+  'skills.show_all': '显示全部',
 
   // Toast
   'toast.operation_failed': '操作失败',

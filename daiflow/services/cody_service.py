@@ -27,6 +27,7 @@ async def build_cody_client(
     workdir: str,
     allowed_roots: list[str] | None = None,
     skill_dir: str | None = None,
+    tools: list | None = None,
 ):
     """Create an AsyncCodyClient from settings."""
     from cody import Cody
@@ -73,6 +74,11 @@ async def build_cody_client(
     else:
         logger.debug("Cody SDK does not support mcp_http_server() — MCP servers skipped")
 
+    # Register custom tools
+    if tools and hasattr(builder, "tool"):
+        for tool_fn in tools:
+            builder = builder.tool(tool_fn)
+
     return builder.build()
 
 
@@ -99,6 +105,7 @@ async def build_runner(
     skill_dir: str | None = None,
     project_id: str | None = None,
     task_id: str | None = None,
+    tools: list | None = None,
 ):
     """Runner factory: resolve config via three-layer lookup and instantiate runner.
 
@@ -109,6 +116,7 @@ async def build_runner(
         skill_dir: Optional skill directory (Cody-specific).
         project_id: Used for project-level runner override lookup.
         task_id: Used for task-level runner override lookup.
+        tools: Optional list of custom tool functions (Cody-specific).
 
     Returns:
         An AbstractAgentRunner ready for use as an async context manager.
@@ -116,7 +124,7 @@ async def build_runner(
     from daiflow.services.runner_service import build_runner_from_config, resolve_runner_config
 
     rc = await resolve_runner_config(db, project_id=project_id, task_id=task_id)
-    return await build_runner_from_config(rc, db, workdir, allowed_roots, skill_dir)
+    return await build_runner_from_config(rc, db, workdir, allowed_roots, skill_dir, tools=tools)
 
 
 async def build_task_runner(db: AsyncSession, task_id: str, project_id: str):

@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import Topbar from '../../components/Shell/Topbar'
 import {
-  listSkills, getSkill, createSkill, updateSkill, deleteSkill,
-  type SkillBriefData, type SkillData,
+  listSkills, getSkill, createSkill, updateSkill, deleteSkill, listProjects,
+  type SkillBriefData, type SkillData, type ProjectData,
 } from '../../api'
 import { useLocale } from '../../hooks/useLocale'
 import { useToast } from '../../components/Toast/ToastContext'
@@ -52,16 +53,38 @@ function SkillForm({ initial, onSave, onCancel, t }: {
 export default function Skills() {
   const { t } = useLocale()
   const toast = useToast()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const projectIdParam = searchParams.get('project_id') || undefined
+
   const [skills, setSkills] = useState<SkillBriefData[]>([])
   const [filter, setFilter] = useState<FilterType>('all')
   const [selected, setSelected] = useState<SkillData | null>(null)
-  const [editing, setEditing] = useState<string | null>(null) // 'new' | skill_id | null
+  const [editing, setEditing] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [projects, setProjects] = useState<ProjectData[]>([])
+
+  // Load projects for name resolution
+  useEffect(() => {
+    listProjects().then(setProjects).catch(() => {})
+  }, [])
+
+  const projectName = (sourceId: string) => {
+    const p = projects.find(pr => pr.id === sourceId)
+    return p?.name || sourceId.substring(0, 8)
+  }
 
   const load = useCallback(() => {
-    const params = filter !== 'all' ? { source_type: filter } : undefined
-    listSkills(params).then(setSkills).catch(err => console.error('Failed to load skills:', err))
-  }, [filter])
+    const params: Record<string, string> = {}
+    if (projectIdParam) {
+      params.project_id = projectIdParam
+    } else if (filter !== 'all') {
+      params.source_type = filter
+    }
+    listSkills(Object.keys(params).length > 0 ? params : undefined)
+      .then(setSkills)
+      .catch(err => console.error('Failed to load skills:', err))
+  }, [filter, projectIdParam])
 
   useEffect(() => { load() }, [load])
 
@@ -105,15 +128,22 @@ export default function Skills() {
   }
 
   const sourceLabel = (s: SkillBriefData) => {
-    if (s.source_type === 'project') return t('skills.source_project')
+    if (s.source_type === 'project') return projectName(s.source_id)
     if (s.source_type === 'external') return t('skills.source_external')
     return t('skills.source_manual')
+  }
+
+  const clearProjectFilter = () => {
+    navigate('/skills', { replace: true })
   }
 
   return (
     <>
       <Topbar
         title={t('skills.title')}
+        subtitle={projectIdParam ? projectName(projectIdParam) : undefined}
+        backTo={projectIdParam ? '/projects' : undefined}
+        backLabel={projectIdParam ? t('skills.back_to_projects') : undefined}
         actions={
           editing !== 'new' ? (
             <button className="btn btn-primary btn-sm" onClick={() => {
@@ -127,15 +157,25 @@ export default function Skills() {
         <div className="skills-page">
           <p className="page-desc">{t('skills.page_desc')}</p>
 
-          {/* Filter tabs */}
-          <div className="skill-filters">
-            {(['all', 'project', 'manual', 'external'] as FilterType[]).map(f => (
-              <button key={f} className={`btn btn-sm ${filter === f ? 'btn-primary' : 'btn-ghost'}`}
-                onClick={() => { setFilter(f); setSelected(null); setEditing(null) }}>
-                {t(`skills.filter_${f}`)}
-              </button>
-            ))}
-          </div>
+          {/* Filter tabs — hidden when viewing a specific project */}
+          {!projectIdParam && (
+            <div className="skill-filters">
+              {(['all', 'project', 'manual', 'external'] as FilterType[]).map(f => (
+                <button key={f} className={`btn btn-sm ${filter === f ? 'btn-primary' : 'btn-ghost'}`}
+                  onClick={() => { setFilter(f); setSelected(null); setEditing(null) }}>
+                  {t(`skills.filter_${f}`)}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Project filter banner */}
+          {projectIdParam && (
+            <div className="skill-project-banner">
+              <span>{t('skills.showing_project')}: <strong>{projectName(projectIdParam)}</strong></span>
+              <button className="btn btn-ghost btn-sm" onClick={clearProjectFilter}>{t('skills.show_all')}</button>
+            </div>
+          )}
 
           <div className="skill-layout">
             {/* List */}
@@ -181,8 +221,9 @@ export default function Skills() {
                   </div>
                   {selected.description && <p className="skill-detail-desc">{selected.description}</p>}
                   <div className="skill-source-info">
-                    <span className={`skill-source-tag source-${selected.source_type}`}>{sourceLabel(selected as any)}</span>
-                    {selected.source_type === 'project' && <span className="skill-source-id">ID: {selected.source_id}</span>}
+                    <span className={`skill-source-tag source-${selected.source_type}`}>
+                      {selected.source_type === 'project' ? projectName(selected.source_id) : sourceLabel(selected as any)}
+                    </span>
                   </div>
                   <pre className="skill-detail-content">{selected.content}</pre>
                 </>

@@ -260,7 +260,8 @@ async def sync_skills_to_task(db: AsyncSession, project_id: str, task_id: str) -
     """Pull skills from DB, assemble SKILL.md files, and write to task skill dir.
 
     Falls back to legacy file-copy if no DB skills exist for the project.
-    Also copies project.md (file-based, unchanged).
+    Also writes project.md to task root for backward compatibility with prompts
+    that reference it (sourced from the 'project-summary' skill in DB).
 
     Returns the number of skills written.
     """
@@ -287,8 +288,16 @@ async def sync_skills_to_task(db: AsyncSession, project_id: str, task_id: str) -
         skill_dir.mkdir(parents=True, exist_ok=True)
         (skill_dir / "SKILL.md").write_text(assemble_skill_md(skill), encoding="utf-8")
 
-    # Also copy project.md if it exists
-    _copy_project_md(project_id, task_id)
+    # Backward compat: write project.md to task root from 'project-summary' skill
+    project_summary = next((s for s in skills if s.name == "project-summary"), None)
+    if project_summary:
+        task_dir = TASKS_DIR / task_id
+        task_dir.mkdir(parents=True, exist_ok=True)
+        (task_dir / "project.md").write_text(project_summary.content, encoding="utf-8")
+    else:
+        # Legacy fallback: copy file-based project.md if it exists
+        _copy_project_md(project_id, task_id)
+
     return len(skills)
 
 

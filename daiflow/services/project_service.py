@@ -10,7 +10,7 @@ from sqlalchemy import select, update
 from daiflow.config import utc_iso
 from daiflow.database import get_background_db
 from daiflow.models import ProjectRepo, Session, SessionStatus
-from daiflow.prompts import CONSTITUTION_PROMPT_TEMPLATE, KNOWLEDGE_PROMPTS, PROJECT_MD_PROMPT
+from daiflow.prompts import CONSTITUTION_PROMPT_TEMPLATE, KNOWLEDGE_PROMPTS, PROJECT_SUMMARY_PROMPT
 from daiflow.services.cody_service import append_path_boundary
 from daiflow.services.git_service import clone_or_pull, get_head_hash
 from daiflow.services.settings_service import get_language_setting
@@ -136,6 +136,39 @@ def compute_init_sessions(project_id: str, repos: list) -> list[dict]:
     return sessions
 
 
+def _make_save_skill_tool(db_holder: list, project_id: str):
+    """Create a save_skill custom tool function bound to a DB session and project.
+
+    db_holder is a single-element list holding the AsyncSession, allowing the
+    closure to reference the session that's alive during the agent run.
+    """
+    async def save_skill(ctx, name: str, description: str, content: str) -> str:
+        """Save a knowledge skill to the Skill Center database. Call this tool to persist your analysis output."""
+        from daiflow.services.skill_service import upsert_skill
+        from daiflow.schemas import SkillCreate
+        await upsert_skill(db_holder[0], SkillCreate(
+            source_type="project",
+            source_id=project_id,
+            name=name.strip(),
+            description=description.strip(),
+            content=content.strip(),
+        ))
+        return f"Skill '{name}' saved successfully."
+    return save_skill
+
+
+async def _get_project_skills_content(db, project_id: str) -> str:
+    """Build a text block with all existing skills for a project, for injection into prompts."""
+    from daiflow.services.skill_service import get_project_skills
+    skills = await get_project_skills(db, project_id)
+    if not skills:
+        return "(No skills generated yet)"
+    parts = []
+    for s in skills:
+        parts.append(f"### {s.name}\n**Description:** {s.description}\n\n{s.content}")
+    return "\n\n---\n\n".join(parts)
+
+
 async def _run_constitution(
     project_id: str,
     project_dir: Path,
@@ -143,14 +176,18 @@ async def _run_constitution(
     project_bus: str,
     lang: str | None,
 ) -> None:
-    """Layer 5: generate constitution.md that captures core development principles."""
+    """Layer 5: generate constitution via save_skill tool."""
     sid = _init_sid(project_id, "constitution")
     async with get_background_db() as layer5_db:
-        prompt = CONSTITUTION_PROMPT_TEMPLATE.format(output_path=str(project_dir))
+        skills_content = await _get_project_skills_content(layer5_db, project_id)
+        prompt = CONSTITUTION_PROMPT_TEMPLATE.format(skills_content=skills_content)
         from daiflow.services.cody_service import append_path_boundary, build_runner
         prompt = append_path_boundary(prompt, str(project_dir), allowed_roots)
+        db_holder = [layer5_db]
+        save_tool = _make_save_skill_tool(db_holder, project_id)
         agent_runner = await build_runner(
-            layer5_db, str(project_dir), allowed_roots, project_id=project_id
+            layer5_db, str(project_dir), allowed_roots,
+            project_id=project_id, tools=[save_tool],
         )
         session_runner = SessionRunner(agent_runner)
         async with agent_runner:
@@ -170,44 +207,23 @@ async def _run_knowledge_task(
     lang: str | None,
     project_id: str | None = None,
 ):
-    """Run a single knowledge generation task with its own DB session."""
+    """Run a single knowledge generation task via save_skill custom tool."""
     async with get_background_db() as task_db:
-        skills_dir = project_dir / "skills" / knowledge_type
-        skills_dir.mkdir(parents=True, exist_ok=True)
         repos_context = _build_repos_context(repos)
-        prompt = KNOWLEDGE_PROMPTS[knowledge_type].format(
-            output_path=str(skills_dir), repos_context=repos_context,
-        )
+        prompt = KNOWLEDGE_PROMPTS[knowledge_type].format(repos_context=repos_context)
         prompt = append_path_boundary(prompt, str(project_dir), allowed_roots)
         from daiflow.services.cody_service import build_runner
-        agent_runner = await build_runner(task_db, str(project_dir), allowed_roots, project_id=project_id)
+        tools = []
+        if project_id:
+            db_holder = [task_db]
+            tools.append(_make_save_skill_tool(db_holder, project_id))
+        agent_runner = await build_runner(
+            task_db, str(project_dir), allowed_roots,
+            project_id=project_id, tools=tools or None,
+        )
         session_runner = SessionRunner(agent_runner)
         async with agent_runner:
             await session_runner.run(task_db, session_id, prompt, extra_channels=[project_bus], language=lang)
-
-        # Ingest generated SKILL.md into Skill Center DB
-        if project_id:
-            await _ingest_skill_file(task_db, project_id, knowledge_type, skills_dir / "SKILL.md")
-
-
-async def _ingest_skill_file(db, project_id: str, knowledge_type: str, skill_file: Path):
-    """Read a generated SKILL.md file and push it to the Skill Center DB."""
-    try:
-        if not skill_file.exists():
-            return
-        content = skill_file.read_text(encoding="utf-8")
-        from daiflow.services.skill_service import parse_skill_md, upsert_skill
-        from daiflow.schemas import SkillCreate
-        name, description, body = parse_skill_md(content)
-        await upsert_skill(db, SkillCreate(
-            source_type="project",
-            source_id=project_id,
-            name=name or knowledge_type,
-            description=description,
-            content=body,
-        ))
-    except Exception:
-        logger.warning("Failed to ingest skill %s for project %s", knowledge_type, project_id, exc_info=True)
 
 
 async def _run_layer(
@@ -250,12 +266,18 @@ async def _run_layer4(
     project_bus: str,
     lang: str | None,
 ):
-    """Run Layer 4: generate project.md index."""
+    """Run Layer 4: generate project-summary via save_skill tool."""
     sid = _init_sid(project_id, "project_md")
     async with get_background_db() as layer4_db:
-        prompt = PROJECT_MD_PROMPT.format(output_path=str(project_dir))
+        skills_content = await _get_project_skills_content(layer4_db, project_id)
+        prompt = PROJECT_SUMMARY_PROMPT.format(skills_content=skills_content)
         from daiflow.services.cody_service import build_runner
-        agent_runner = await build_runner(layer4_db, str(project_dir), allowed_roots, project_id=project_id)
+        db_holder = [layer4_db]
+        save_tool = _make_save_skill_tool(db_holder, project_id)
+        agent_runner = await build_runner(
+            layer4_db, str(project_dir), allowed_roots,
+            project_id=project_id, tools=[save_tool],
+        )
         session_runner = SessionRunner(agent_runner)
         async with agent_runner:
             await session_runner.run(layer4_db, sid, prompt, extra_channels=[project_bus], language=lang)

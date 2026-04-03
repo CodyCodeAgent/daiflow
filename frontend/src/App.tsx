@@ -6,7 +6,6 @@ import Projects from './pages/Projects/Projects'
 import CreateProject from './pages/Projects/CreateProject'
 import EditProject from './pages/Projects/EditProject'
 import ProjectInit from './pages/Projects/ProjectInit'
-import ProjectKnowledge from './pages/Projects/ProjectKnowledge'
 import Tasks from './pages/Tasks/Tasks'
 import InitStage from './pages/DevFlow/InitStage/InitStage'
 import PlanStage from './pages/DevFlow/PlanStage/PlanStage'
@@ -85,7 +84,6 @@ export default function App() {
             <Route path="/projects/new" element={<SettingsGuard><CreateProject /></SettingsGuard>} />
             <Route path="/projects/:projectId/edit" element={<SettingsGuard><EditProject /></SettingsGuard>} />
             <Route path="/projects/:projectId/init" element={<SettingsGuard><ProjectInit /></SettingsGuard>} />
-            <Route path="/projects/:projectId/knowledge" element={<SettingsGuard><ProjectKnowledge /></SettingsGuard>} />
             <Route path="/tasks" element={<SettingsGuard><Tasks /></SettingsGuard>} />
             <Route path="/devflow/:taskId/init" element={<SettingsGuard><StageErrorBoundary><DevFlowGuard stagePath="init"><InitStage /></DevFlowGuard></StageErrorBoundary></SettingsGuard>} />
             <Route path="/devflow/:taskId/plan" element={<SettingsGuard><StageErrorBoundary><DevFlowGuard stagePath="plan"><PlanStage /></DevFlowGuard></StageErrorBoundary></SettingsGuard>} />
