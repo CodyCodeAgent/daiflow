@@ -9,7 +9,7 @@ from sqlalchemy.orm import selectinload
 
 from daiflow.config import PROJECTS_DIR
 from daiflow.database import get_db
-from daiflow.models import Project, ProjectRepo, Session, Task, TaskStatus
+from daiflow.models import Project, ProjectRepo, Session, SessionStatus, Task, TaskStatus
 from daiflow.schemas import ProjectCreate, ProjectResponse, ProjectUpdate
 from daiflow.services.project_service import (
     get_init_layer_status, prepare_init_sessions, run_init, run_init_retry,
@@ -242,7 +242,7 @@ async def retry_init(
         select(Session).where(
             Session.ref_id == project_id,
             Session.type == "init",
-            Session.status == 3,  # FAILED
+            Session.status == SessionStatus.FAILED,
         )
     )
     failed = result.scalars().all()
@@ -256,7 +256,7 @@ async def retry_init(
     # Reset failed sessions in from_layer to waiting
     for s in failed:
         if s.layer == from_layer:
-            s.status = 0
+            s.status = SessionStatus.WAITING
             s.error = None
             s.started_at = None
             s.finished_at = None
@@ -270,7 +270,7 @@ async def retry_init(
         )
     )
     for s in subsequent.scalars().all():
-        s.status = 0
+        s.status = SessionStatus.WAITING
         s.error = None
         s.started_at = None
         s.finished_at = None

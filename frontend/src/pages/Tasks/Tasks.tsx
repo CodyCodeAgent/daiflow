@@ -48,10 +48,12 @@ export default function Tasks() {
     listRunners().then(setRunners).catch(() => {})
   }, [projectId])
 
-  // Cleanup object URLs on unmount
+  // Cleanup object URLs on unmount only (use ref to avoid stale closure)
+  const prdImagesRef = useRef(prdImages)
+  prdImagesRef.current = prdImages
   useEffect(() => {
-    return () => { prdImages.forEach(img => URL.revokeObjectURL(img.url)) }
-  }, [prdImages])
+    return () => { prdImagesRef.current.forEach(img => URL.revokeObjectURL(img.url)) }
+  }, [])
 
   const filteredTasks = tasks.filter(t => {
     if (filter === 'active') return t.status > 0 && t.status < 7

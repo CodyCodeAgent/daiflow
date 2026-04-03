@@ -34,18 +34,23 @@ export default function ChatInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const mentionRef = useRef<HTMLDivElement>(null)
 
+  const mentionGenRef = useRef(0)
   useEffect(() => {
     if (!mentionActive || !taskId) {
       setMentionFiles([])
       return
     }
+    const gen = ++mentionGenRef.current
     const timer = setTimeout(() => {
       listTaskFiles(taskId, mentionQuery)
         .then(data => {
+          if (gen !== mentionGenRef.current) return // stale response
           setMentionFiles(data.files.map(f => ({ path: f })))
           setMentionIdx(0)
         })
-        .catch(() => setMentionFiles([]))
+        .catch(() => {
+          if (gen === mentionGenRef.current) setMentionFiles([])
+        })
     }, 150)
     return () => clearTimeout(timer)
   }, [mentionActive, mentionQuery, taskId])

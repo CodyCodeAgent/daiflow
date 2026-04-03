@@ -131,7 +131,7 @@ class Todo(Base):
     seq = Column(Integer, nullable=False)
     title = Column(String, default="")
     description = Column(Text, default="")
-    status = Column(Integer, default=0)  # 0=pending,1=running,2=done,3=failed
+    status = Column(Integer, default=0)  # 0=pending,1=running,2=done,3=failed,4=skipped
     cody_session_id = Column(String, nullable=True)
     commit_before = Column(Text, default="")  # JSON: {"repo_path": "hash", ...}
     commit_after = Column(Text, default="")   # JSON: {"repo_path": "hash", ...}
