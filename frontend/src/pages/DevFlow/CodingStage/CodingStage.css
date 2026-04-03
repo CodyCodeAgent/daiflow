@@ -213,13 +213,6 @@
   gap: 8px;
 }
 
-.preview-btns {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  text-transform: none;
-  letter-spacing: 0;
-}
 
 .live-dot {
   width: 6px;

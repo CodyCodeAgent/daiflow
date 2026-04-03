@@ -438,17 +438,32 @@ async def run_init_retry(project_id: str, failed_session_ids: list[str], from_la
         lang = await get_language_setting(db)
 
         # Run failed sessions in from_layer
-        failed_results = await db.execute(
-            select(Session).where(Session.session_id.in_(failed_session_ids))
-        )
-        failed_sessions = failed_results.scalars().all()
-        if failed_sessions:
-            layer_ok = await _run_layer(failed_sessions, from_layer, project_dir, allowed_roots, repos, project_bus, lang,
-                                        project_id=project_id)
-            if not layer_ok:
-                logger.error("Retry layer %d had failures, aborting init for project %s", from_layer, project_id)
+        if from_layer == 4:
+            try:
+                await _run_layer4(project_id, project_dir, allowed_roots, project_bus, lang)
+            except Exception as e:
+                logger.error("Retry layer 4 project.md failed: %s", e)
                 await _finalize_init(db, project_id, project_bus)
                 return
+        elif from_layer == 5:
+            try:
+                await _run_constitution(project_id, project_dir, allowed_roots, project_bus, lang)
+            except Exception as e:
+                logger.error("Retry layer 5 constitution.md failed: %s", e)
+            await _finalize_init(db, project_id, project_bus)
+            return
+        else:
+            failed_results = await db.execute(
+                select(Session).where(Session.session_id.in_(failed_session_ids))
+            )
+            failed_sessions = failed_results.scalars().all()
+            if failed_sessions:
+                layer_ok = await _run_layer(failed_sessions, from_layer, project_dir, allowed_roots, repos, project_bus, lang,
+                                            project_id=project_id)
+                if not layer_ok:
+                    logger.error("Retry layer %d had failures, aborting init for project %s", from_layer, project_id)
+                    await _finalize_init(db, project_id, project_bus)
+                    return
 
         # Run all sessions in subsequent layers
         for layer_num in range(from_layer + 1, 6):  # layers go up to 5
@@ -457,6 +472,11 @@ async def run_init_retry(project_id: str, failed_session_ids: list[str], from_la
                     await _run_layer4(project_id, project_dir, allowed_roots, project_bus, lang)
                 except Exception as e:
                     logger.error("Retry layer 4 project.md failed: %s", e)
+            elif layer_num == 5:
+                try:
+                    await _run_constitution(project_id, project_dir, allowed_roots, project_bus, lang)
+                except Exception as e:
+                    logger.error("Retry layer 5 constitution.md failed: %s", e)
             else:
                 layer_results = await db.execute(
                     select(Session).where(

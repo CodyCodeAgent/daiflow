@@ -100,9 +100,6 @@ async def create_project(data: ProjectCreate, db: AsyncSession = Depends(get_db)
             repo_type=r.repo_type,
             repo_type_label=r.repo_type_label,
             description=r.description,
-            dev_command=r.dev_command,
-            dev_port=r.dev_port,
-            dev_preview_url=r.dev_preview_url,
             sub_path=r.sub_path,
         )
         db.add(repo)
@@ -152,9 +149,6 @@ async def update_project(
                 matched.repo_type = r.repo_type
                 matched.repo_type_label = r.repo_type_label
                 matched.description = r.description
-                matched.dev_command = r.dev_command
-                matched.dev_port = r.dev_port
-                matched.dev_preview_url = r.dev_preview_url
                 matched.sub_path = r.sub_path
             else:
                 repo = ProjectRepo(
@@ -164,9 +158,6 @@ async def update_project(
                     repo_type=r.repo_type,
                     repo_type_label=r.repo_type_label,
                     description=r.description,
-                    dev_command=r.dev_command,
-                    dev_port=r.dev_port,
-                    dev_preview_url=r.dev_preview_url,
                     sub_path=r.sub_path,
                 )
                 db.add(repo)

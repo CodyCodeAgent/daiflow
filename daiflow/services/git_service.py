@@ -117,10 +117,70 @@ async def commit(local_path: str, message: str):
     await _run(["git", "commit", "-m", message], cwd=local_path)
 
 
-async def push(local_path: str, branch: str):
-    """Push to remote."""
+async def push(local_path: str, branch: str) -> str | None:
+    """Push to remote. Returns MR/PR URL parsed from push output if available."""
     validate_branch_name(branch)
-    await _run(["git", "push", "-u", "origin", branch], cwd=local_path)
+    cmd = ["git", "push", "-u", "origin", branch]
+    proc = await asyncio.create_subprocess_exec(
+        *cmd, cwd=local_path,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    try:
+        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=120)
+    except asyncio.TimeoutError:
+        proc.kill()
+        raise RuntimeError("Git push timed out after 120s")
+    if proc.returncode != 0:
+        stderr_text = stderr.decode().strip()
+        logger.error("Git command failed: git push | stderr: %s", stderr_text)
+        raise RuntimeError(f"Git push failed: {stderr_text[:200]}")
+    # GitHub/GitLab print the compare/create-MR URL in stderr on successful push
+    match = re.search(r'https?://\S+', stderr.decode())
+    return match.group(0).rstrip('.') if match else None
+
+
+async def create_pr(local_path: str, title: str, body: str = "") -> str | None:
+    """Create a pull request using GitHub CLI (gh).
+
+    Returns the PR URL if successful, None if gh is not available or fails.
+    """
+    import shutil
+
+    # Check if gh is available
+    gh_path = shutil.which("gh")
+    if not gh_path:
+        logger.warning("gh CLI not found, cannot create PR automatically")
+        return None
+
+    try:
+        # Create PR and capture the URL from output
+        proc = await asyncio.create_subprocess_exec(
+            "gh", "pr", "create",
+            "--title", title,
+            "--body", body if body else title,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            cwd=local_path,
+        )
+        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=60)
+
+        if proc.returncode != 0:
+            stderr_text = stderr.decode().strip()
+            logger.error("gh pr create failed: %s", stderr_text)
+            return None
+
+        # Output is typically the PR URL
+        pr_url = stdout.decode().strip()
+        logger.info("PR created: %s", pr_url)
+        return pr_url
+
+    except asyncio.TimeoutError:
+        logger.error("gh pr create timed out")
+        return None
+    except Exception as e:
+        logger.error("Failed to create PR with gh: %s", e)
+        return None
 
 
 async def fetch_remote(local_path: str, timeout: int = 120) -> None:
@@ -148,3 +208,50 @@ async def merge_ff_only(local_path: str, remote_branch: str) -> None:
     """Fast-forward merge from a remote tracking branch. Use after fetch_remote()."""
     validate_branch_name(remote_branch)
     await _run(["git", "merge", "--ff-only", f"origin/{remote_branch}"], cwd=local_path)
+
+
+def generate_mr_link(git_url: str, branch: str) -> str | None:
+    """Generate a merge request / pull request link from git URL and branch.
+
+    Supports GitHub, GitLab, Gitee, and Bitbucket.
+    Returns None if the URL format is not recognized.
+    """
+    if not git_url or not branch:
+        return None
+
+    # Normalize URL (remove .git suffix and trailing slashes)
+    url = git_url.rstrip("/").removesuffix(".git")
+
+    # Extract host and path
+    if not url.startswith(("http://", "https://", "git@")):
+        return None
+
+    # Handle SSH URLs (git@host:path)
+    if url.startswith("git@"):
+        # git@github.com:user/repo -> https://github.com/user/repo
+        url = "https://" + url[4:].replace(":", "/", 1)
+
+    # Parse URL
+    try:
+        from urllib.parse import urlparse
+        parsed = urlparse(url)
+        host = parsed.netloc.lower()
+        path = parsed.path.lstrip("/")
+    except Exception:
+        return None
+
+    if not path:
+        return None
+
+    # Generate MR/PR link based on platform
+    if "github.com" in host:
+        return f"https://{host}/{path}/compare/{branch}?expand=1"
+    elif "gitlab.com" in host or "gitlab" in host:
+        return f"https://{host}/{path}/-/merge_requests/new?merge_request[source_branch]={branch}"
+    elif "gitee.com" in host or "gitee" in host:
+        return f"https://{host}/{path}/pull_requests/new?pull_request[source_branch]={branch}"
+    elif "bitbucket.org" in host or "bitbucket" in host:
+        return f"https://{host}/{path}/pull-requests/new?source={branch}"
+    else:
+        # Generic fallback - try to create a reasonable link
+        return f"https://{host}/{path}/pulls/new?source={branch}"

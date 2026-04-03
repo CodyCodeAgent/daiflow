@@ -165,7 +165,7 @@ class TestMaskRunnerConfig:
 
 
 # ---------------------------------------------------------------------------
-# 4. config — safe_filename, utc_iso, PREVIEW_MODE
+# 4. config — safe_filename, utc_iso
 # ---------------------------------------------------------------------------
 
 class TestSafeFilename:
@@ -201,12 +201,6 @@ class TestUtcIso:
         result = utc_iso(dt)
         assert "+00:00" not in result
         assert result.endswith("Z")
-
-
-class TestPreviewMode:
-    def test_preview_mode_is_valid(self):
-        from daiflow.config import PREVIEW_MODE, _VALID_PREVIEW_MODES
-        assert PREVIEW_MODE in _VALID_PREVIEW_MODES
 
 
 # ---------------------------------------------------------------------------

@@ -8,8 +8,11 @@ support prepare_chat().
 
 from sqlalchemy import select
 
+from pathlib import Path
+
 from daiflow.agents import AgentConfig, AgentContext, register_agent
 from daiflow.models import Session
+from daiflow.prompts import REVIEW_CHAT_PREFIX
 from daiflow.session_runner import make_file_write_detector
 
 
@@ -29,6 +32,16 @@ class ReviewAgent(AgentConfig):
             )
         )
         return result.scalar()
+
+    def chat_system_prefix(self, ctx: AgentContext) -> str | None:
+        task = ctx.task
+        plan_path = Path(ctx.task_dir) / "plan.md"
+        return REVIEW_CHAT_PREFIX.format(
+            task_name=task.name if task else "",
+            task_description=task.description if task else "",
+            plan_path=plan_path,
+            task_dir=ctx.task_dir,
+        )
 
     def build_artifact_detector(self, ctx: AgentContext):
         return make_file_write_detector(None, "code_updated")

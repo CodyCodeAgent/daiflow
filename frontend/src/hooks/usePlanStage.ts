@@ -84,5 +84,8 @@ export function usePlanStage(taskId: string | undefined) {
     stopGeneration: agent.stopGeneration,
     // Spec panel state (forwarded from useSpecStage)
     spec,
+    // Phase progress: spec is generating (phase 1), spec done → plan phase (phase 2)
+    specGenerating: spec.generating || spec.specStatus === SessionStatus.RUNNING,
+    specDone: !!spec.specContent || spec.specStatus === SessionStatus.DONE || spec.specStatus === SessionStatus.FAILED,
   }
 }

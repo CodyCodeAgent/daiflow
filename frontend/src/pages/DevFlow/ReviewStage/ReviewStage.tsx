@@ -4,10 +4,9 @@ import StageLayout, { isStageReadonly } from '../../../components/StageLayout/St
 import DiffViewer, { parseDiff } from '../../../components/DiffViewer/DiffViewer'
 import Modal from '../../../components/Modal/Modal'
 import { useAgent } from '../../../hooks/useAgent'
-import { useCommitModal } from '../../../hooks/useCommitModal'
+import { useCommitModal, type MrResult } from '../../../hooks/useCommitModal'
 import { getTask, getTaskDiff, joinDiffs, TaskData } from '../../../api'
 import { useLocale } from '../../../hooks/useLocale'
-import { useDevServer } from '../../../hooks/useDevServer'
 import { useToast } from '../../../components/Toast/ToastContext'
 import { sessionIds } from '../../../utils/sessionIds'
 import './ReviewStage.css'
@@ -47,7 +46,15 @@ export default function ReviewStage() {
     onUpdated,
   })
 
-  const commitModal = useCommitModal({ taskId, taskName: task?.name, onError: toast.error })
+  const commitModal = useCommitModal({ 
+    taskId, 
+    taskName: task?.name, 
+    onError: toast.error,
+    onSuccess: () => {
+      // Refresh task data to get updated mr_info
+      loadData()
+    },
+  })
 
   const { additions, deletions, files } = useMemo(() => {
     const parsed = parseDiff(diff)
@@ -58,7 +65,6 @@ export default function ReviewStage() {
     }
   }, [diff])
 
-  const devServer = useDevServer(taskId!)
   const readonly = task ? isStageReadonly(task.status, 5) : false
 
   return (
@@ -84,24 +90,6 @@ export default function ReviewStage() {
                     <span className="summary-num" style={{ color: 'var(--blue)' }}>{files}</span>
                     <span className="summary-label">{t('review.files')}</span>
                   </div>
-                </div>
-                <div className="preview-btns">
-                  {devServer.status?.running ? (
-                    <>
-                      <button className="btn btn-primary btn-xs" onClick={devServer.openPreview}>
-                        ↗ {t('devserver.open')}
-                      </button>
-                      <button className="btn btn-ghost btn-xs" onClick={devServer.stop}>{t('devserver.stop')}</button>
-                    </>
-                  ) : (
-                    <button
-                      className="btn btn-ghost btn-xs"
-                      onClick={devServer.start}
-                      disabled={devServer.starting}
-                    >
-                      {devServer.starting ? t('devserver.starting') : `▶ ${t('devserver.start')}`}
-                    </button>
-                  )}
                 </div>
               </div>
               <DiffViewer
@@ -183,6 +171,26 @@ export default function ReviewStage() {
             <div className="success-icon">✓</div>
             <div className="success-title">{t('review.success')}</div>
             <div className="success-sub">{t('review.success_sub')}</div>
+            {/* MR Links */}
+            {commitModal.results.filter(r => r.status === 'success' && r.mr_link).length > 0 && (
+              <div className="mr-links">
+                <div className="mr-links-title">{t('review.mr_links')}</div>
+                {commitModal.results.filter(r => r.status === 'success').map((result, idx) => (
+                  <div key={idx} className="mr-link-item">
+                    <span className="mr-repo" title={result.repo}>
+                      {result.repo.replace(/.*[/:]/, '').replace(/\.git$/, '')}
+                    </span>
+                    {result.mr_link ? (
+                      <a href={result.mr_link} target="_blank" rel="noopener noreferrer" className="mr-link-btn">
+                        {t('review.open_mr')} →
+                      </a>
+                    ) : (
+                      <span className="mr-link-na">{t('review.mr_link_na')}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
             <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 20 }}>
               <button className="btn btn-ghost" onClick={commitModal.closeModal}>{t('review.close')}</button>
               <button className="btn btn-primary" onClick={() => navigate('/tasks')}>{t('review.return_tasks')}</button>

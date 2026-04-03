@@ -41,12 +41,6 @@ DEFAULT_LANGUAGE = "en"
 # Session log retention (days). Logs older than this are cleaned up on startup.
 LOG_RETENTION_DAYS = int(os.environ.get("DAIFLOW_LOG_RETENTION_DAYS", "30"))
 
-# Preview mode: "local" (localhost URL, new tab), "builtin" (built-in reverse proxy)
-_VALID_PREVIEW_MODES = {"local", "builtin"}
-PREVIEW_MODE = os.environ.get("DAIFLOW_PREVIEW_MODE", "local")
-if PREVIEW_MODE not in _VALID_PREVIEW_MODES:
-    PREVIEW_MODE = "local"
-
 
 def init_daiflow_dir():
     """Create the ~/.daiflow/ directory structure if it doesn't exist."""

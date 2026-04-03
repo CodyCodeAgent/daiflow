@@ -13,27 +13,21 @@ export function useSpecStage(taskId: string | undefined, task?: TaskData | null)
   const [initialSpec, setInitialSpec] = useState('')
   const [chatSpecContent, setChatSpecContent] = useState<string | null>(null)
   const [generating, setGenerating] = useState(false)
-  // Guard: only poll for spec session after spec has been triggered OR if spec_doc
-  // already exists.  Without this, the hook would constantly poll a 404 endpoint
-  // for tasks that are in PLANNING state but have never generated a spec.
-  const [specActivated, setSpecActivated] = useState(false)
 
   const refreshTask = useCallback(() => {
     if (taskId) {
       getTask(taskId).then(t => {
         setInitialSpec(t.spec_doc || '')
-        if (t.spec_doc) setSpecActivated(true)
       }).catch(() => {/* ignore — main task load in usePlanStage handles error */})
     }
   }, [taskId])
 
   useEffect(() => { refreshTask() }, [refreshTask])
 
-  // Only activate the session subscription when:
-  // 1. Task is in PLANNING state (avoids 404 noise for completed stages)
-  // 2. Spec has been activated (either already exists or user triggered generation)
+  // Subscribe to the spec session whenever the task is in PLANNING state.
+  // Spec is now always auto-generated on confirm-init, so no activation guard needed.
   const isPlanning = task?.status === PLANNING_STATUS
-  const sessionId = (taskId && isPlanning && specActivated) ? sessionIds.spec(taskId) : null
+  const sessionId = (taskId && isPlanning) ? sessionIds.spec(taskId) : null
 
   const onUpdated = useCallback((event: WSEvent) => {
     if (event.type === 'spec_updated' && event.content) {
@@ -69,7 +63,6 @@ export function useSpecStage(taskId: string | undefined, task?: TaskData | null)
 
   const refreshSession = useCallback(() => {
     setChatSpecContent(null)
-    setSpecActivated(true)   // Spec is now being generated; start session polling
     setGenerating(true)
     agent.refreshSession()
   }, [agent.refreshSession])

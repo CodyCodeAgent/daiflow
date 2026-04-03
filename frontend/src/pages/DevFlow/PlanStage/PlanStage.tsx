@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import StageLayout, { isStageReadonly } from '../../../components/StageLayout/StageLayout'
 import MarkdownViewer from '../../../components/MarkdownViewer/MarkdownViewer'
 import { usePlanStage } from '../../../hooks/usePlanStage'
-import { lockPlan, triggerPlan, triggerSpec, getTaskArtifact, type ArtifactResponse } from '../../../api'
+import { lockPlan, triggerPlan, getTaskArtifact, type ArtifactResponse } from '../../../api'
 import { useLocale } from '../../../hooks/useLocale'
 import { useToast } from '../../../components/Toast/ToastContext'
 
@@ -21,24 +21,15 @@ export default function PlanStage() {
   const navigate = useNavigate()
   const { t } = useLocale()
   const toast = useToast()
-  const { task, planContent, status, messages, sendMessage, responding, cancelling, stopGeneration, regenerating, refreshSession, isStale, spec } = usePlanStage(taskId)
+  const { task, planContent, status, messages, sendMessage, responding, cancelling, stopGeneration, regenerating, refreshSession, isStale, spec, specGenerating, specDone } = usePlanStage(taskId)
 
   const readonly = task ? isStageReadonly(task.status, 2) : false
-  const [activeTab, setActiveTab] = useState<ArtifactTab>('spec')
+  const [activeTab, setActiveTab] = useState<ArtifactTab>('plan')
   const [researchArtifact, setResearchArtifact] = useState<ArtifactResponse | null>(null)
   const [dataModelArtifact, setDataModelArtifact] = useState<ArtifactResponse | null>(null)
   const [loadingArtifacts, setLoadingArtifacts] = useState(false)
 
   const hasSpec = !!spec.specContent
-  const specGenerating = spec.generating
-  const specError = spec.specError
-
-  // Auto-advance to plan tab once plan is available
-  useEffect(() => {
-    if (planContent && activeTab === 'spec' && hasSpec) {
-      setActiveTab('plan')
-    }
-  }, [planContent])
 
   // Load side artifacts whenever plan content changes
   useEffect(() => {
@@ -57,10 +48,6 @@ export default function PlanStage() {
 
   const handleRegenerate = async () => {
     if (!taskId) return
-    if (!hasSpec && !readonly) {
-      toast.error(t('plan.blocked_by_spec'))
-      return
-    }
     await triggerPlan(taskId)
     refreshSession()
     setActiveTab('plan')
@@ -76,26 +63,70 @@ export default function PlanStage() {
     }
   }
 
-  const handleGenerateSpec = async () => {
-    if (!taskId) return
-    try {
-      await triggerSpec(taskId)
-      spec.refreshSpecSession()
-      setActiveTab('spec')
-    } catch (err: any) {
-      toast.error(err.message || t('toast.operation_failed'))
-    }
-  }
-
   const isGenerating = responding || regenerating
   const lockDisabled = !planContent || isGenerating || readonly
-  const regenerateDisabled = isGenerating || readonly || (!hasSpec && !readonly)
-  const useSpecChat = activeTab === 'spec'
+  const regenerateDisabled = isGenerating || readonly
 
-  // Determine which tabs to show
-  const visibleTabs: ArtifactTab[] = ['spec', 'plan']
+  // Determine which tabs to show (spec is a background step, not shown as a tab)
+  const visibleTabs: ArtifactTab[] = ['plan']
   if (researchArtifact?.exists) visibleTabs.push('research')
   if (dataModelArtifact?.exists) visibleTabs.push('data-model')
+
+  // Phase-based loading: show full-page phase indicator when no plan content yet
+  if (!planContent && !readonly) {
+    if (specGenerating) {
+      return (
+        <StageLayout
+          taskId={taskId!}
+          task={task}
+          currentStage={2}
+          content={
+            <div className="card plan-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '240px' }}>
+              <div className="typing-row" style={{ justifyContent: 'center' }}>
+                <div className="typing-dot" /><div className="typing-dot" /><div className="typing-dot" />
+              </div>
+              <div style={{ marginTop: 12, fontSize: '14px', color: 'var(--t2)' }}>{t('plan.phase_spec')}</div>
+            </div>
+          }
+          actions={<></>}
+          chatTitle={t('plan.chat_title')}
+          chatMessages={messages}
+          chatOnSend={sendMessage}
+          chatResponding={responding}
+          chatCancelling={cancelling}
+          chatOnStop={stopGeneration}
+          isStale={isStale}
+          onRetry={refreshSession}
+        />
+      )
+    }
+    if (specDone && status === 1) {
+      return (
+        <StageLayout
+          taskId={taskId!}
+          task={task}
+          currentStage={2}
+          content={
+            <div className="card plan-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '240px' }}>
+              <div className="typing-row" style={{ justifyContent: 'center' }}>
+                <div className="typing-dot" /><div className="typing-dot" /><div className="typing-dot" />
+              </div>
+              <div style={{ marginTop: 12, fontSize: '14px', color: 'var(--t2)' }}>{t('plan.phase_plan')}</div>
+            </div>
+          }
+          actions={<></>}
+          chatTitle={t('plan.chat_title')}
+          chatMessages={messages}
+          chatOnSend={sendMessage}
+          chatResponding={responding}
+          chatCancelling={cancelling}
+          chatOnStop={stopGeneration}
+          isStale={isStale}
+          onRetry={refreshSession}
+        />
+      )
+    }
+  }
 
   const getTabContent = () => {
     switch (activeTab) {
@@ -118,18 +149,7 @@ export default function PlanStage() {
 
   const renderSpecTab = () => {
     if (hasSpec) {
-      return (
-        <>
-          <MarkdownViewer content={spec.specContent} />
-          {!specGenerating && !readonly && (
-            <div style={{ marginTop: '12px' }}>
-              <button className="btn btn-ghost btn-xs" onClick={handleGenerateSpec} disabled={readonly}>
-                {t('spec.regenerate')}
-              </button>
-            </div>
-          )}
-        </>
-      )
+      return <MarkdownViewer content={spec.specContent} />
     }
     if (specGenerating) {
       return (
@@ -143,47 +163,12 @@ export default function PlanStage() {
     }
     return (
       <div style={{ padding: '24px 0' }}>
-        {!!specError && (
-          <div style={{
-            marginBottom: '10px',
-            padding: '10px 12px',
-            borderRadius: '8px',
-            fontSize: '12px',
-            lineHeight: 1.5,
-            color: 'var(--red)',
-            background: 'var(--red-d)',
-            border: '1px solid rgba(248,113,113,.35)',
-            whiteSpace: 'pre-wrap',
-          }}>
-            {String(specError)}
-          </div>
-        )}
-        <p style={{ marginBottom: '8px', fontSize: '13px', color: 'var(--t2)' }}>{t('spec.required_hint')}</p>
-        <p style={{ marginBottom: '16px', fontSize: '12px', color: 'var(--t3)' }}>{t('spec.hint')}</p>
-        <button
-          className="btn btn-primary"
-          onClick={handleGenerateSpec}
-          disabled={specGenerating || readonly}
-        >
-          {t('spec.generate')}
-        </button>
+        <p style={{ fontSize: '13px', color: 'var(--t3)' }}>{t('spec.generating')}</p>
       </div>
     )
   }
 
   const renderPlanTab = () => {
-    if (!hasSpec && !readonly) {
-      return (
-        <div style={{ padding: '32px 0', textAlign: 'center' }}>
-          <div style={{ fontSize: '28px', marginBottom: '12px', opacity: 0.6 }}>&#128274;</div>
-          <p style={{ fontSize: '14px', color: 'var(--t1)', marginBottom: '4px', fontWeight: 500 }}>{t('plan.blocked_by_spec')}</p>
-          <p style={{ fontSize: '12px', color: 'var(--t3)', marginBottom: '16px' }}>{t('spec.hint')}</p>
-          <button className="btn btn-primary" onClick={() => setActiveTab('spec')}>
-            {t('spec.generate')}
-          </button>
-        </div>
-      )
-    }
     if (planContent) {
       return <MarkdownViewer content={planContent} />
     }
@@ -280,21 +265,18 @@ export default function PlanStage() {
             <button className="btn btn-ghost" onClick={handleRegenerate} disabled={regenerateDisabled}>
               {t('plan.regenerate')}
             </button>
-            {regenerateDisabled && !readonly && !hasSpec && (
-              <span className="btn-tooltip">{t('tooltip.need_spec')}</span>
-            )}
             {readonly && <span className="btn-tooltip">{t('tooltip.readonly')}</span>}
           </span>
         </>
       }
-      chatTitle={useSpecChat ? t('spec.chat_title') : t('plan.chat_title')}
-      chatMessages={useSpecChat ? spec.specMessages : messages}
-      chatOnSend={useSpecChat ? spec.sendSpecMessage : sendMessage}
-      chatResponding={useSpecChat ? spec.specResponding : responding}
-      chatCancelling={useSpecChat ? spec.specCancelling : cancelling}
-      chatOnStop={useSpecChat ? spec.stopSpecGeneration : stopGeneration}
-      isStale={useSpecChat ? spec.isStale : isStale}
-      onRetry={useSpecChat ? spec.refreshSpecSession : refreshSession}
+      chatTitle={t('plan.chat_title')}
+      chatMessages={messages}
+      chatOnSend={sendMessage}
+      chatResponding={responding}
+      chatCancelling={cancelling}
+      chatOnStop={stopGeneration}
+      isStale={isStale}
+      onRetry={refreshSession}
     />
   )
 }

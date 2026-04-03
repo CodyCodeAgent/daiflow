@@ -100,9 +100,6 @@ export interface RepoData {
   repo_type_label: string
   description: string
   sub_path: string
-  dev_command: string
-  dev_port: number | null
-  dev_preview_url: string
 }
 
 export interface SessionStatusData {
@@ -137,20 +134,8 @@ interface CreateProjectData {
     repo_type_label?: string
     description?: string
     sub_path?: string
-    dev_command?: string
-    dev_port?: number | null
-    dev_preview_url?: string
   }[]
   runner_id?: string | null
-}
-
-export interface DevServerStatus {
-  running: boolean
-  /** Local dev server URL (always http://localhost:{port}) */
-  url: string
-  port: number
-  /** External preview URL configured by user (may be empty) */
-  preview_url: string
 }
 
 interface CreateTaskData {
@@ -273,18 +258,10 @@ export const getTaskDiff = (taskId: string) =>
 export const generateCommitMessage = (taskId: string) =>
   request<{ commit_message: string }>(`/tasks/${taskId}/generate-commit-message`, { method: 'POST' })
 export const submitMR = (taskId: string, commitMessage: string) =>
-  request<{ ok: boolean; results: { repo: string; status: string; error?: string }[] }>(`/tasks/${taskId}/submit-mr`, {
+  request<{ ok: boolean; results: { repo: string; status: string; error?: string; mr_link?: string }[] }>(`/tasks/${taskId}/submit-mr`, {
     method: 'POST',
     body: JSON.stringify({ commit_message: commitMessage }),
   })
-
-// ── Dev Server ──
-export const startDevServer = (taskId: string) =>
-  request<DevServerStatus>(`/tasks/${taskId}/dev-server/start`, { method: 'POST' })
-export const stopDevServer = (taskId: string) =>
-  request<{ ok: boolean }>(`/tasks/${taskId}/dev-server/stop`, { method: 'POST' })
-export const getDevServerStatus = (taskId: string) =>
-  request<DevServerStatus>(`/tasks/${taskId}/dev-server/status`)
 
 // ── PRD Images ──
 export async function uploadPrdImage(taskId: string, file: File): Promise<{ filename: string }> {

@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 
 from daiflow.config import cleanup_old_logs, init_daiflow_dir
 from daiflow.database import init_db
-from daiflow.routers import jobs, preview_proxy, projects, sessions, settings, tasks, todos, ws
+from daiflow.routers import jobs, projects, sessions, settings, tasks, todos, ws
 
 logger = logging.getLogger(__name__)
 
@@ -118,12 +118,6 @@ async def lifespan(app: FastAPI):
     # Stop repo monitor on shutdown
     stop_monitor()
 
-    # Stop all dev server subprocesses
-    from daiflow.services.dev_server_service import dev_server_manager
-    await dev_server_manager.stop_all()
-
-    # Close preview proxy httpx client
-    await preview_proxy.shutdown_client()
 
 
 app = FastAPI(title="DaiFlow", version=pkg_version("daiflow"), lifespan=lifespan)
@@ -148,7 +142,6 @@ app.include_router(tasks.router)
 app.include_router(todos.router)
 app.include_router(sessions.router)
 app.include_router(jobs.router)
-app.include_router(preview_proxy.router)
 app.include_router(ws.router)
 
 # Serve React build as static files (production mode)

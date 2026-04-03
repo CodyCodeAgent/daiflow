@@ -48,12 +48,9 @@ class RepoResponse(_ORMBase):
     repo_type: str
     repo_type_label: str
     description: str
-    dev_command: str = ""
-    dev_port: int | None = None
-    dev_preview_url: str = ""
     sub_path: str = ""
 
-    @field_validator("dev_command", "dev_preview_url", "sub_path", mode="before")
+    @field_validator("sub_path", mode="before")
     @classmethod
     def _coerce_str_field(cls, v):
         return v if v is not None else ""
@@ -154,9 +151,6 @@ class RepoCreate(BaseModel):
     repo_type: str = "custom"
     repo_type_label: str = ""
     description: str = ""
-    dev_command: str = ""
-    dev_port: int | None = None
-    dev_preview_url: str = ""
     sub_path: str = ""
 
 

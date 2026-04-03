@@ -215,6 +215,8 @@ const en = {
   'plan.regenerate': 'Regenerate',
   'plan.chat_title': 'Plan Discussion',
   'plan.blocked_by_spec': 'Generate the functional spec first (Step 1) before running the plan.',
+  'plan.phase_spec': 'Organizing requirements...',
+  'plan.phase_plan': 'Generating execution plan...',
 
   'artifact.research': 'Research Notes',
   'artifact.data_model': 'Data Model',
@@ -290,6 +292,9 @@ const en = {
   'review.close': 'Close',
   'review.return_tasks': 'Return to Tasks',
   'review.generating_commit': 'Generating commit message...',
+  'review.mr_links': 'MR / PR Links',
+  'review.open_mr': 'Open MR',
+  'review.mr_link_na': 'Local Repo',
 
   // ChatPanel
   'chat.default_title': 'AI Chat',
@@ -405,25 +410,6 @@ const en = {
   'runners.inherit_suffix': '(inherited: {name})',
   'runners.not_set': 'Not set',
 
-  // Dev Server Preview
-  'devserver.start': 'Start Preview',
-  'devserver.starting': 'Starting...',
-  'devserver.open': 'Open Preview',
-  'devserver.stop': 'Stop',
-  'devserver.not_configured': 'Dev server not configured',
-  'devserver.start_failed': 'Failed to start dev server',
-  'devserver.close_preview': 'Close Preview',
-  'devserver.refresh': 'Refresh',
-  'devserver.open_external': 'Open in New Tab',
-
-  // Project Form - Dev Server
-  'form.dev_command': 'Dev Command',
-  'form.dev_command_placeholder': 'npm run dev',
-  'form.dev_port': 'Dev Port',
-  'form.dev_port_placeholder': '5173',
-  'form.dev_preview_url': 'Preview URL',
-  'form.dev_preview_url_placeholder': 'Leave empty for localhost:{port}',
-
   // Tool Approval
   'tool_approval.accept': 'Accept Changes',
   'tool_approval.revert': 'Undo Changes',
@@ -442,9 +428,6 @@ const en = {
 
   // TodoStage
   'todo.needs_previous': 'Complete previous todos first',
-
-  // PreviewPanel
-  'preview.loading': 'Loading preview...',
 
   // ReviewStage
   'review.step_generating': 'Generating commit message...',

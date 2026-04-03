@@ -99,4 +99,12 @@ class CodyRunner:
         return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        await self._client.__aexit__(exc_type, exc_val, exc_tb)
+        try:
+            await self._client.__aexit__(exc_type, exc_val, exc_tb)
+        except (asyncio.CancelledError, RuntimeError) as e:
+            # Ignore cleanup errors during async generator shutdown
+            # These are expected when the stream is interrupted
+            logger.debug("CodyRunner cleanup interrupted: %s", e)
+        except Exception as e:
+            # Log unexpected errors but don't re-raise during cleanup
+            logger.warning("CodyRunner cleanup failed: %s", e)

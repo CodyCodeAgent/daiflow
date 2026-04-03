@@ -174,6 +174,7 @@ export function useCodingStage(taskId: string | undefined) {
   /** Trigger run-all-todos. Optimistically marks as in-progress; throws on failure. */
   const executeAll = useCallback(async () => {
     if (!taskId) return
+    await loadData()
     setOptimisticRunAll(true)
     try {
       await runAllTodos(taskId)
@@ -181,7 +182,7 @@ export function useCodingStage(taskId: string | undefined) {
       setOptimisticRunAll(false)
       throw err
     }
-  }, [taskId])
+  }, [taskId, loadData])
 
   /** Cancel the run-all loop. Current todo will finish before stopping. */
   const cancelAll = useCallback(async () => {
