@@ -185,7 +185,7 @@ class TestStartCoding:
 class TestSkillService:
     def test_legacy_sync_no_source(self):
         """When project skills don't exist, legacy sync creates empty directory."""
-        from daiflow.services.skill_service import _legacy_sync
+        from daiflow.services.skill_sync import _legacy_sync
 
         with tempfile.TemporaryDirectory() as tmpdir:
             import os
@@ -197,12 +197,12 @@ class TestSkillService:
             importlib.reload(cfg)
             cfg.init_daiflow_dir()
 
-            import daiflow.services.skill_service as ss
+            import daiflow.services.skill_sync as ss
             importlib.reload(ss)
 
             ss._legacy_sync("proj_1", "task_1")
 
-            task_skills = ss.get_task_skills_dir("task_1")
+            task_skills = cfg.get_task_skills_dir("task_1")
             assert task_skills.exists()
 
             if old:
@@ -212,7 +212,7 @@ class TestSkillService:
 
     def test_get_task_dir_creates(self):
         """get_task_dir should create the directory."""
-        from daiflow.services.skill_service import get_task_dir
+        from daiflow.config import get_task_dir
 
         with tempfile.TemporaryDirectory() as tmpdir:
             import os
@@ -224,13 +224,11 @@ class TestSkillService:
             importlib.reload(cfg)
             cfg.init_daiflow_dir()
 
-            import daiflow.services.skill_service as ss
-            importlib.reload(ss)
+            importlib.reload(cfg)
 
-            d = ss.get_task_dir("task_42")
+            d = cfg.get_task_dir("task_42")
             assert d.exists()
 
             if old:
                 os.environ["DAIFLOW_HOME"] = old
             importlib.reload(cfg)
-            importlib.reload(ss)

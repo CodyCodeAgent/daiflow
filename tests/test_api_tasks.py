@@ -306,7 +306,7 @@ class TestInitTaskTransition:
         task_id = t.id
 
         async def mock_sync(*a, **kw): return 0
-        with patch("daiflow.services.skill_service.sync_skills_to_task", side_effect=mock_sync):
+        with patch("daiflow.services.skill_sync.sync_skills_to_task", side_effect=mock_sync):
             from daiflow.services.task_service import init_task
 
             from contextlib import asynccontextmanager

@@ -216,6 +216,9 @@ class Skill(Base):
     created_at = Column(DateTime, default=_now)
     updated_at = Column(DateTime, default=_now, onupdate=_now)
 
+    project_links = relationship("ProjectSkill", back_populates="skill", cascade="all, delete-orphan")
+    task_links = relationship("TaskSkill", back_populates="skill", cascade="all, delete-orphan")
+
     __table_args__ = (
         Index("uq_skill_source_name", "source_type", "source_id", "name", unique=True),
     )
@@ -230,6 +233,9 @@ class ProjectSkill(Base):
     skill_id = Column(String, ForeignKey("skills.id", ondelete="CASCADE"), nullable=False)
     created_at = Column(DateTime, default=_now)
 
+    project = relationship("Project", back_populates="project_skills")
+    skill = relationship("Skill", back_populates="project_links")
+
     __table_args__ = (
         Index("uq_project_skill", "project_id", "skill_id", unique=True),
     )
@@ -243,6 +249,9 @@ class TaskSkill(Base):
     task_id = Column(String, ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
     skill_id = Column(String, ForeignKey("skills.id", ondelete="CASCADE"), nullable=False)
     created_at = Column(DateTime, default=_now)
+
+    task = relationship("Task", back_populates="task_skills")
+    skill = relationship("Skill", back_populates="task_links")
 
     __table_args__ = (
         Index("uq_task_skill", "task_id", "skill_id", unique=True),

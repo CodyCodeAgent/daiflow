@@ -89,7 +89,7 @@ async def build_task_cody_client(db: AsyncSession, task_id: str, project_id: str
     and skill directory — the common pattern used by task_service,
     chat_service, and review_service.
     """
-    from daiflow.services.skill_service import get_task_dir, get_task_skills_dir
+    from daiflow.config import get_task_dir, get_task_skills_dir
     from daiflow.services.task_service import get_task_context
 
     task_dir = get_task_dir(task_id)
@@ -133,7 +133,7 @@ async def build_task_runner(db: AsyncSession, task_id: str, project_id: str):
     Convenience wrapper equivalent to build_task_cody_client() but returns
     an AbstractAgentRunner honouring the task/project/global runner config.
     """
-    from daiflow.services.skill_service import get_task_dir, get_task_skills_dir
+    from daiflow.config import get_task_dir, get_task_skills_dir
     from daiflow.services.task_service import get_task_context
 
     task_dir = get_task_dir(task_id)

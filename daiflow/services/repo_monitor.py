@@ -15,7 +15,7 @@ from daiflow.database import get_background_db
 from daiflow.models import Job, JobRun, JobRunStatus, ProjectRepo
 from daiflow.services.git_service import fetch_remote, get_remote_head, merge_ff_only
 from daiflow.services.project_service import repo_dir_name
-from daiflow.services.skill_service import get_project_dir
+from daiflow.config import get_project_dir
 
 logger = logging.getLogger(__name__)
 
