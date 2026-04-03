@@ -80,7 +80,7 @@ async def _sync_associated_entity(session: Session, db: AsyncSession) -> list[st
             todo_id = parts[-1]
             todo = await db.get(Todo, todo_id)
             if todo and todo.status not in (TodoStatus.FAILED, TodoStatus.DONE):
-                old = todo.status.name
+                old = TodoStatus(todo.status).name
                 try:
                     wf = TodoWorkflow(todo, db)
                     await wf.fail()
@@ -125,7 +125,7 @@ async def force_fail_session(session_id: str, db: AsyncSession = Depends(get_db)
     if session.status not in (SessionStatus.WAITING, SessionStatus.RUNNING):
         raise HTTPException(
             status_code=400,
-            detail=f"Session is already in terminal state: {session.status.name}",
+            detail=f"Session is already in terminal state: {SessionStatus(session.status).name}",
         )
 
     now = datetime.now(timezone.utc)
@@ -150,7 +150,7 @@ async def sync_associated_status(session_id: str, db: AsyncSession = Depends(get
     if session.status != SessionStatus.FAILED:
         raise HTTPException(
             status_code=400,
-            detail=f"Session is not failed (status={session.status.name}), nothing to sync",
+            detail=f"Session is not failed (status={SessionStatus(session.status).name}), nothing to sync",
         )
 
     changes = await _sync_associated_entity(session, db)

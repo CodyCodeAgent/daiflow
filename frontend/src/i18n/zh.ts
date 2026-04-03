@@ -217,6 +217,8 @@ const zh: Record<TranslationKey, string> = {
   'plan.regenerate': '重新生成',
   'plan.chat_title': '方案讨论',
   'plan.blocked_by_spec': '请先完成第 1 步（生成功能规格）再生成技术方案。',
+  'plan.phase_spec': '正在梳理需求...',
+  'plan.phase_plan': '正在生成执行计划...',
 
   'artifact.research': '调研笔记',
   'artifact.data_model': '数据模型',
@@ -292,6 +294,9 @@ const zh: Record<TranslationKey, string> = {
   'review.close': '关闭',
   'review.return_tasks': '返回任务列表',
   'review.generating_commit': '正在生成提交信息...',
+  'review.mr_links': 'MR / PR 链接',
+  'review.open_mr': '打开 MR',
+  'review.mr_link_na': '本地仓库',
 
   // ChatPanel
   'chat.default_title': 'AI 对话',
@@ -407,25 +412,6 @@ const zh: Record<TranslationKey, string> = {
   'runners.inherit_suffix': '（继承：{name}）',
   'runners.not_set': '未设置',
 
-  // Dev Server Preview
-  'devserver.start': '启动预览',
-  'devserver.starting': '启动中...',
-  'devserver.open': '打开预览',
-  'devserver.stop': '停止',
-  'devserver.not_configured': '未配置 Dev Server',
-  'devserver.start_failed': '启动 Dev Server 失败',
-  'devserver.close_preview': '关闭预览',
-  'devserver.refresh': '刷新',
-  'devserver.open_external': '新窗口打开',
-
-  // Project Form - Dev Server
-  'form.dev_command': '启动命令',
-  'form.dev_command_placeholder': 'npm run dev',
-  'form.dev_port': 'Dev 端口',
-  'form.dev_port_placeholder': '5173',
-  'form.dev_preview_url': '预览地址',
-  'form.dev_preview_url_placeholder': '留空则使用 localhost:{port}',
-
   // Tool Approval
   'tool_approval.accept': '接受变更',
   'tool_approval.revert': '撤销变更',
@@ -444,9 +430,6 @@ const zh: Record<TranslationKey, string> = {
 
   // TodoStage
   'todo.needs_previous': '需先完成前面的 Todo',
-
-  // PreviewPanel
-  'preview.loading': '正在加载预览...',
 
   // ReviewStage
   'review.step_generating': '正在生成提交信息...',

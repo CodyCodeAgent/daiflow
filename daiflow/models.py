@@ -91,9 +91,6 @@ class ProjectRepo(Base):
     description = Column(Text, default="")
     sub_path = Column(String, default="")  # focus subdirectory within the repo (empty = whole repo)
     master_hash = Column(String, default="")  # last known master/main HEAD hash
-    dev_command = Column(String, default="")
-    dev_port = Column(Integer, nullable=True)
-    dev_preview_url = Column(String, default="")
     created_at = Column(DateTime, default=_now)
 
     project = relationship("Project", back_populates="repos")

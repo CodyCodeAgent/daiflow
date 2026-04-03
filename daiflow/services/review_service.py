@@ -1,5 +1,6 @@
 """Review stage service: diff aggregation, commit message generation, MR submission."""
 
+import asyncio
 import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -72,12 +73,16 @@ async def generate_commit_message(db: AsyncSession, task: Task) -> str:
             project_id=task.project_id, task_id=task.id,
         )
         result_text = ""
-        async with runner:
-            async for event in runner.stream(prompt):
-                if event["type"] == "text_delta":
-                    result_text += event.get("content", "")
-                elif event["type"] == "done":
-                    break
+        try:
+            async with runner:
+                async for event in runner.stream(prompt):
+                    if event["type"] == "text_delta":
+                        result_text += event.get("content", "")
+        except (asyncio.CancelledError, RuntimeError) as e:
+            # Handle async generator cleanup errors gracefully
+            logger.warning("Commit message generation interrupted for task %s: %s", task.id, e)
+            if result_text.strip():
+                return result_text.strip()
         return result_text.strip() or fallback
     except Exception:
         logger.warning("AI commit message generation failed for task %s", task.id, exc_info=True)
@@ -87,7 +92,7 @@ async def generate_commit_message(db: AsyncSession, task: Task) -> str:
 async def submit_mr(db: AsyncSession, task: Task, commit_message: str) -> list[dict]:
     """Commit and push changes across all repos.
 
-    Returns a list of per-repo result dicts with status/error fields.
+    Returns a list of per-repo result dicts with status/error/mr_link fields.
     State transition (REVIEWING → DONE) is handled by the router for consistency
     with other stage transitions.
     """
@@ -119,8 +124,11 @@ async def submit_mr(db: AsyncSession, task: Task, commit_message: str) -> list[d
             results.append({"repo": repo_label, "status": "error", "error": cr.get("error", "commit failed")})
             continue
         try:
-            await push(repo_path, task.branch)
-            results.append({"repo": repo_label, "status": "success"})
+            mr_link = await push(repo_path, task.branch)
+            result: dict = {"repo": repo_label, "status": "success"}
+            if mr_link:
+                result["mr_link"] = mr_link
+            results.append(result)
         except Exception as e:
             results.append({
                 "repo": repo_label,

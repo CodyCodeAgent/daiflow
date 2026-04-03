@@ -1,10 +1,17 @@
 import { useState, useCallback } from 'react'
 import { generateCommitMessage, submitMR } from '../api'
 
+export interface MrResult {
+  repo: string
+  status: string
+  error?: string
+  mr_link?: string
+}
+
 interface UseCommitModalOptions {
   taskId: string | undefined
   taskName?: string
-  onSuccess?: () => void
+  onSuccess?: (results: MrResult[]) => void
   onError?: (message: string) => void
 }
 
@@ -14,6 +21,7 @@ export function useCommitModal({ taskId, taskName, onSuccess, onError }: UseComm
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [generating, setGenerating] = useState(false)
+  const [results, setResults] = useState<MrResult[]>([])
 
   const openModal = useCallback(async () => {
     if (!taskId) return
@@ -21,6 +29,7 @@ export function useCommitModal({ taskId, taskName, onSuccess, onError }: UseComm
     setGenerating(true)
     setCommitMessage('')
     setSubmitted(false)
+    setResults([])
     try {
       const result = await generateCommitMessage(taskId)
       setCommitMessage(result.commit_message)
@@ -39,9 +48,10 @@ export function useCommitModal({ taskId, taskName, onSuccess, onError }: UseComm
     if (!taskId || !commitMessage.trim()) return
     setSubmitting(true)
     try {
-      await submitMR(taskId, commitMessage)
+      const response = await submitMR(taskId, commitMessage)
+      setResults(response.results)
       setSubmitted(true)
-      onSuccess?.()
+      onSuccess?.(response.results)
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       onError ? onError(msg) : console.error('Submit MR failed:', msg)
@@ -57,6 +67,7 @@ export function useCommitModal({ taskId, taskName, onSuccess, onError }: UseComm
     submitting,
     submitted,
     generating,
+    results,
     openModal,
     closeModal,
     submit,

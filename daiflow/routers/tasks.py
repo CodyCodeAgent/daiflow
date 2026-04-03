@@ -4,7 +4,7 @@ import os
 import shutil
 import uuid
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,7 +14,6 @@ from daiflow.database import get_db
 from daiflow.models import Session, SessionStatus, Task, TaskStatus, Todo, TodoStatus
 from daiflow.schemas import SubmitMR, TaskCreate, TaskResponse, TaskUpdate, TodoResponse
 from daiflow.services import review_service
-from daiflow.services.dev_server_service import dev_server_manager
 from daiflow.services.task_service import (
     execute_todo,
     generate_plan,
@@ -322,7 +321,7 @@ async def confirm_init(
     await wf.plan_ready()
     await db.commit()
 
-    background_tasks.add_task(generate_plan, task_id)
+    background_tasks.add_task(generate_spec, task_id)
     return {"ok": True, "status": task.status}
 
 
@@ -482,52 +481,6 @@ async def submit_mr_route(
     await db.commit()
 
     return {"ok": True, "results": results}
-
-
-# ── Dev Server Preview ──
-
-
-@router.post("/{task_id}/dev-server/start")
-async def start_dev_server(task_id: str, request: Request, db: AsyncSession = Depends(get_db)):
-    """Start the dev server for a task's frontend repo."""
-    task = await _get_task_or_404(db, task_id)
-
-    from daiflow.services.task_service import fetch_project_repos, resolve_repo_path
-    repos = await fetch_project_repos(db, task.project_id)
-
-    repo = next((r for r in repos if r.dev_command and r.dev_port), None)
-    if not repo:
-        raise HTTPException(status_code=400, detail="No repo with dev server configured")
-
-    cwd = resolve_repo_path(repo, task_id)
-    if not cwd:
-        raise HTTPException(status_code=400, detail="Cannot resolve repo path")
-
-    server_host = request.headers.get("host", "")
-
-    try:
-        result = await dev_server_manager.start(
-            task_id, repo.id, repo.dev_command, repo.dev_port, cwd,
-            preview_url=repo.dev_preview_url or "",
-            server_host=server_host,
-        )
-    except RuntimeError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    return result
-
-
-@router.post("/{task_id}/dev-server/stop")
-async def stop_dev_server(task_id: str):
-    """Stop the dev server for a task."""
-    await dev_server_manager.stop(task_id)
-    return {"ok": True}
-
-
-@router.get("/{task_id}/dev-server/status")
-async def dev_server_status(task_id: str, request: Request):
-    """Get dev server status for a task."""
-    server_host = request.headers.get("host", "")
-    return dev_server_manager.status(task_id, server_host=server_host)
 
 
 @router.post("/{task_id}/attachments")

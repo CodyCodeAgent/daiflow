@@ -13,9 +13,6 @@ export interface RepoEntry {
   repo_type_label: string
   description: string
   sub_path: string
-  dev_command: string
-  dev_port: number | null
-  dev_preview_url: string
 }
 
 interface ProjectFormProps {
@@ -46,7 +43,7 @@ export default function ProjectForm({
   const [repos, setRepos] = useState<RepoEntry[]>(
     initialRepos || [{
       git_url: '', local_path: '', repo_type: 'frontend', repo_type_label: '', description: '',
-      sub_path: '', dev_command: '', dev_port: null, dev_preview_url: '',
+      sub_path: '',
     }]
   )
   const [skillInput, setSkillInput] = useState('')
@@ -62,7 +59,7 @@ export default function ProjectForm({
   const addRepo = () => {
     setRepos([...repos, {
       git_url: '', local_path: '', repo_type: 'backend', repo_type_label: '', description: '',
-      sub_path: '', dev_command: '', dev_port: null, dev_preview_url: '',
+      sub_path: '',
     }])
   }
 
@@ -154,24 +151,6 @@ export default function ProjectForm({
               <input className="input" placeholder={t('form.sub_path_placeholder')} value={repo.sub_path} onChange={e => updateRepo(i, 'sub_path', e.target.value)} />
             </div>
           </div>
-          {(repo.repo_type === 'frontend' || repo.repo_type === 'fullstack') && (
-            <>
-              <div className="field-row">
-                <div className="field">
-                  <label className="field-label">{t('form.dev_command')}</label>
-                  <input className="input" placeholder={t('form.dev_command_placeholder')} value={repo.dev_command} onChange={e => updateRepo(i, 'dev_command', e.target.value)} />
-                </div>
-                <div className="field" style={{ maxWidth: 140 }}>
-                  <label className="field-label">{t('form.dev_port')}</label>
-                  <input className="input" type="number" placeholder={t('form.dev_port_placeholder')} value={repo.dev_port ?? ''} onChange={e => updateRepo(i, 'dev_port', e.target.value ? parseInt(e.target.value) : null)} />
-                </div>
-              </div>
-              <div className="field">
-                <label className="field-label">{t('form.dev_preview_url')}</label>
-                <input className="input" placeholder={t('form.dev_preview_url_placeholder')} value={repo.dev_preview_url} onChange={e => updateRepo(i, 'dev_preview_url', e.target.value)} />
-              </div>
-            </>
-          )}
         </div>
       ))}
       <button className="add-repo-btn" onClick={addRepo}>{t('form.add_repo')}</button>

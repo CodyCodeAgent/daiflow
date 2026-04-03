@@ -4,7 +4,6 @@ import StageLayout, { isStageReadonly } from '../../../components/StageLayout/St
 import DiffViewer from '../../../components/DiffViewer/DiffViewer'
 import Modal from '../../../components/Modal/Modal'
 import { useCodingStage } from '../../../hooks/useCodingStage'
-import { useDevServer } from '../../../hooks/useDevServer'
 import { skipTodo, startReview } from '../../../api'
 import { useLocale } from '../../../hooks/useLocale'
 import { useToast } from '../../../components/Toast/ToastContext'
@@ -55,7 +54,6 @@ export default function CodingStage() {
     }
   }
 
-  const devServer = useDevServer(taskId!)
   const readonly = task ? isStageReadonly(task.status, 4) : false
 
   // Only the first PENDING or FAILED todo is actionable, and only when nothing is running
@@ -182,24 +180,6 @@ export default function CodingStage() {
                     <span className="sec-bar-left">
                       {t('coding.code_changes')}
                       {todoSessionStatus === 1 && <div className="live-dot" />}
-                    </span>
-                    <span className="preview-btns">
-                      {devServer.status?.running ? (
-                        <>
-                          <button className="btn btn-primary btn-xs" onClick={devServer.openPreview}>
-                            ↗ {t('devserver.open')}
-                          </button>
-                          <button className="btn btn-ghost btn-xs" onClick={devServer.stop}>{t('devserver.stop')}</button>
-                        </>
-                      ) : (
-                        <button
-                          className="btn btn-ghost btn-xs"
-                          onClick={devServer.start}
-                          disabled={devServer.starting}
-                        >
-                          {devServer.starting ? t('devserver.starting') : `▶ ${t('devserver.start')}`}
-                        </button>
-                      )}
                     </span>
                   </div>
                   {todoSessionStatus === 1 && !diff && (

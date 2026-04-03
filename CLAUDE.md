@@ -178,6 +178,7 @@ Layers execute serially (await), tasks within each layer run concurrently (async
 **Layer 2 (parallel, per-repo):** `frontend-structure`, `backend-structure`, `business-flow`, `component-usage`
 **Layer 3 (parallel, cross-repo):** `module-overview`, `api-interaction`, `data-entity`, `dependencies`
 **Layer 4:** Generate `project.md` index file
+**Layer 5:** Generate `constitution.md` (reads `project.md` + all skill files; injected into every coding session)
 
 Output: `~/.daiflow/projects/{project_id}/skills/{knowledge_type}/SKILL.md`
 

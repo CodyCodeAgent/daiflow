@@ -129,17 +129,6 @@ class TestModelCreation:
         assert await db_session.get(ProjectRepo, repo_id) is None
         assert await db_session.get(Task, task_id) is None
 
-    async def test_project_repo_dev_fields_defaults(self, db_session):
-        p = Project(name="proj_dev")
-        db_session.add(p)
-        await db_session.flush()
-        repo = ProjectRepo(project_id=p.id, repo_type="frontend")
-        db_session.add(repo)
-        await db_session.commit()
-        loaded = await db_session.get(ProjectRepo, repo.id)
-        assert loaded.dev_command == ""
-        assert loaded.dev_port is None
-
     async def test_setting_key_value(self, db_session):
         s = Setting(key="cody_model", value="claude-opus-4-6")
         db_session.add(s)

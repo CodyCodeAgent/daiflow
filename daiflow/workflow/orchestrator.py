@@ -98,11 +98,4 @@ async def finish_task(db: AsyncSession, task: Task) -> bool:
         logger.warning("Could not transition task %s to DONE", task.id)
         return False
 
-    # Clean up dev server if running
-    try:
-        from daiflow.services.dev_server_service import dev_server_manager
-        await dev_server_manager.stop(task.id)
-    except Exception:
-        logger.debug("Dev server stop skipped for task %s", task.id, exc_info=True)
-
     return True

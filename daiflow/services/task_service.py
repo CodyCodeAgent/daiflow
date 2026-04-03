@@ -246,6 +246,8 @@ async def generate_spec(task_id: str):
 
         session_id = task_spec(task_id)
         await run_agent(db, "spec", entity_id=task_id, session_id=session_id)
+    # Auto-trigger plan generation after spec completes (success or failure)
+    await generate_plan(task_id)
 
 
 async def generate_todos(task_id: str):
