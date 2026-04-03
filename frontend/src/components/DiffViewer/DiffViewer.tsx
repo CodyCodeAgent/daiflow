@@ -1,7 +1,8 @@
-import { Fragment, memo, useMemo, useState } from 'react'
+import { Fragment, memo, useMemo, useState, useCallback } from 'react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { useTheme } from '../../hooks/useTheme'
+import { useLocale } from '../../hooks/useLocale'
 import './DiffViewer.css'
 
 interface DiffFile {
@@ -253,11 +254,38 @@ function SplitDiffBody({ file, highlightStyle }: { file: DiffFile; highlightStyl
   )
 }
 
+/** Copy file diff to clipboard as plain text. */
+function copyFileDiff(file: DiffFile) {
+  const lines = file.hunks.flatMap(h => [
+    h.header,
+    ...h.lines.map(l =>
+      l.type === 'add' ? `+${l.content}` : l.type === 'remove' ? `-${l.content}` : ` ${l.content}`
+    ),
+  ])
+  navigator.clipboard.writeText(lines.join('\n')).catch(() => {})
+}
+
 export default function DiffViewer({ diffs, collapsed = {}, onToggleFile, defaultMode = 'unified' }: DiffViewerProps) {
   const [viewMode, setViewMode] = useState<DiffViewMode>(defaultMode)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [copiedPath, setCopiedPath] = useState<string | null>(null)
   const { theme } = useTheme()
+  const { t } = useLocale()
   const highlightStyle = theme === 'dark' ? oneDark : oneLight
   const files = useMemo(() => parseDiff(diffs), [diffs])
+
+  const filteredFiles = useMemo(() => {
+    if (!searchQuery.trim()) return files
+    const q = searchQuery.toLowerCase()
+    return files.filter(f => f.path.toLowerCase().includes(q))
+  }, [files, searchQuery])
+
+  const handleCopyFile = useCallback((e: React.MouseEvent, file: DiffFile) => {
+    e.stopPropagation()
+    copyFileDiff(file)
+    setCopiedPath(file.path)
+    setTimeout(() => setCopiedPath(null), 1500)
+  }, [])
 
   if (files.length === 0) {
     return <div style={{ color: 'var(--t2)', padding: '20px', textAlign: 'center' }}>No changes</div>
@@ -265,21 +293,37 @@ export default function DiffViewer({ diffs, collapsed = {}, onToggleFile, defaul
 
   return (
     <div className="diff-viewer">
-      <div className="diff-mode-toggle">
-        <button
-          className={`diff-mode-btn ${viewMode === 'unified' ? 'active' : ''}`}
-          onClick={() => setViewMode('unified')}
-        >
-          Unified
-        </button>
-        <button
-          className={`diff-mode-btn ${viewMode === 'split' ? 'active' : ''}`}
-          onClick={() => setViewMode('split')}
-        >
-          Split
-        </button>
+      <div className="diff-toolbar">
+        {files.length > 3 && (
+          <input
+            className="diff-search-input"
+            type="text"
+            placeholder={t('diff.search_placeholder')}
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+        )}
+        <div className="diff-mode-toggle">
+          <button
+            className={`diff-mode-btn ${viewMode === 'unified' ? 'active' : ''}`}
+            onClick={() => setViewMode('unified')}
+          >
+            Unified
+          </button>
+          <button
+            className={`diff-mode-btn ${viewMode === 'split' ? 'active' : ''}`}
+            onClick={() => setViewMode('split')}
+          >
+            Split
+          </button>
+        </div>
       </div>
-      {files.map(file => {
+      {filteredFiles.length === 0 && searchQuery && (
+        <div style={{ color: 'var(--t3)', textAlign: 'center', padding: '20px', fontSize: '12px' }}>
+          {t('diff.no_matches')}
+        </div>
+      )}
+      {filteredFiles.map(file => {
         const isCollapsed = collapsed[file.path] ?? false
         return (
           <div key={file.path} className={`diff-file-block ${isCollapsed ? 'collapsed' : ''}`}>
@@ -294,6 +338,13 @@ export default function DiffViewer({ diffs, collapsed = {}, onToggleFile, defaul
                 {' '}
                 <span style={{ color: 'var(--red)' }}>-{file.deletions}</span>
               </span>
+              <button
+                className="diff-copy-btn"
+                title={t('diff.copied')}
+                onClick={(e) => handleCopyFile(e, file)}
+              >
+                {copiedPath === file.path ? '✓' : '⎘'}
+              </button>
             </div>
             {file.binary ? (
               <div className="diff-body" style={{ padding: '12px 16px', color: 'var(--t3)', fontStyle: 'italic' }}>

@@ -113,13 +113,16 @@ export default function ReviewStage() {
           </div>
         }
         actions={
-          <button
-            className="btn btn-teal"
-            disabled={readonly || commitModal.generating}
-            onClick={commitModal.openModal}
-          >
-            {t('review.submit_mr')}
-          </button>
+          <span className="btn-with-tooltip">
+            <button
+              className="btn btn-teal"
+              disabled={readonly || commitModal.generating}
+              onClick={commitModal.openModal}
+            >
+              {t('review.submit_mr')}
+            </button>
+            {readonly && <span className="btn-tooltip">{t('tooltip.readonly')}</span>}
+          </span>
         }
         chatTitle={t('review.chat_title')}
         chatMessages={agent.messages}
@@ -139,14 +142,20 @@ export default function ReviewStage() {
             <div className="modal-sub">{t('review.commit_sub')}</div>
             <div className="field">
               <label className="field-label">{t('review.commit_msg')}</label>
-              <textarea
-                className="input"
-                rows={6}
-                value={commitModal.generating ? t('review.generating_commit') : commitModal.commitMessage}
-                onChange={e => commitModal.setCommitMessage(e.target.value)}
-                disabled={commitModal.generating}
-                style={{ fontFamily: 'var(--mono)', fontSize: '12px' }}
-              />
+              {commitModal.generating ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 0', color: 'var(--t2)', fontSize: '12px' }}>
+                  <div className="spinner" />
+                  {t('review.step_generating')}
+                </div>
+              ) : (
+                <textarea
+                  className="input"
+                  rows={6}
+                  value={commitModal.commitMessage}
+                  onChange={e => commitModal.setCommitMessage(e.target.value)}
+                  style={{ fontFamily: 'var(--mono)', fontSize: '12px' }}
+                />
+              )}
             </div>
             <div className="git-meta">
               <div className="git-meta-row">
@@ -165,7 +174,7 @@ export default function ReviewStage() {
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 20 }}>
               <button className="btn btn-ghost" onClick={commitModal.closeModal}>{t('review.cancel')}</button>
               <button className="btn btn-teal" onClick={commitModal.submit} disabled={commitModal.submitting || commitModal.generating}>
-                {commitModal.submitting ? t('review.pushing') : t('review.confirm_push')}
+                {commitModal.submitting ? t('review.step_pushing') : t('review.confirm_push')}
               </button>
             </div>
           </>

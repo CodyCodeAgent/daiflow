@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useLocale } from '../../hooks/useLocale'
 import './PreviewPanel.css'
 
@@ -14,6 +15,7 @@ interface PreviewPanelProps {
 
 export default function PreviewPanel({ url, displayUrl, refreshKey, onClose, onRefresh, onOpenExternal }: PreviewPanelProps) {
   const { t } = useLocale()
+  const [loading, setLoading] = useState(true)
   const shownUrl = displayUrl || url
 
   return (
@@ -26,12 +28,21 @@ export default function PreviewPanel({ url, displayUrl, refreshKey, onClose, onR
           <button className="preview-action-btn" onClick={onClose} title={t('devserver.close_preview')}>✕</button>
         </div>
       </div>
-      <iframe
-        key={refreshKey}
-        className="preview-iframe"
-        src={url}
-        title="Dev Server Preview"
-      />
+      <div className="preview-frame-wrapper">
+        {loading && (
+          <div className="preview-loading">
+            <div className="spinner" />
+            <span>{t('preview.loading')}</span>
+          </div>
+        )}
+        <iframe
+          key={refreshKey}
+          className="preview-iframe"
+          src={url}
+          title="Dev Server Preview"
+          onLoad={() => setLoading(false)}
+        />
+      </div>
     </div>
   )
 }

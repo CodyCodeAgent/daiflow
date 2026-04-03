@@ -101,7 +101,7 @@ export default function McpServers() {
   const [mcpForm, setMcpForm] = useState({ name: '', url: '', headers: '', enabled: true })
 
   const loadMcpServers = useCallback(() => {
-    listMcpServers().then(setMcpServers).catch(() => {})
+    listMcpServers().then(setMcpServers).catch(err => console.error('Failed to load MCP servers:', err))
   }, [])
 
   useEffect(() => {

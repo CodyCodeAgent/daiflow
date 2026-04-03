@@ -68,6 +68,7 @@ export function useWsSync({
     let cancelled = false
     let pollTimer: ReturnType<typeof setInterval> | null = null
     let unsub: (() => void) | null = null
+    let fetchInFlight = false
 
     const stopPoll = () => {
       if (pollTimer) { clearInterval(pollTimer); pollTimer = null }
@@ -93,6 +94,8 @@ export function useWsSync({
 
     // 2. Fetch, then conditionally start polling
     async function doFetch() {
+      if (fetchInFlight) return // guard against concurrent fetches
+      fetchInFlight = true
       try {
         const isDone = await fetchDataRef.current()
         if (cancelled) return
@@ -102,16 +105,21 @@ export function useWsSync({
         }
         // 3. Start fallback polling (if not already running)
         if (!pollTimer) {
+          let polling = false
           pollTimer = setInterval(async () => {
+            if (polling || cancelled) return // skip if previous poll still running
+            polling = true
             try {
               const check = pollCheckRef.current || fetchDataRef.current
               const isDone = await check()
               if (cancelled) return
               if (isDone) cleanup()
             } catch { /* ignore polling errors */ }
+            finally { polling = false }
           }, POLL_INTERVAL_MS)
         }
       } catch { /* errors handled by consumer's fetchData via try/catch */ }
+      finally { fetchInFlight = false }
     }
 
     doFetch()

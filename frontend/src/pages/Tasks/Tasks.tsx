@@ -45,13 +45,15 @@ export default function Tasks() {
   useEffect(() => {
     listTasks(projectId).then(setTasks).catch(err => console.error('Failed to load tasks:', err))
     listProjects().then(setProjects).catch(err => console.error('Failed to load projects:', err))
-    listRunners().then(setRunners).catch(() => {})
+    listRunners().then(setRunners).catch(err => console.error('Failed to load runners:', err))
   }, [projectId])
 
-  // Cleanup object URLs on unmount
+  // Cleanup object URLs on unmount only (use ref to avoid stale closure)
+  const prdImagesRef = useRef(prdImages)
+  prdImagesRef.current = prdImages
   useEffect(() => {
-    return () => { prdImages.forEach(img => URL.revokeObjectURL(img.url)) }
-  }, [prdImages])
+    return () => { prdImagesRef.current.forEach(img => URL.revokeObjectURL(img.url)) }
+  }, [])
 
   const filteredTasks = tasks.filter(t => {
     if (filter === 'active') return t.status > 0 && t.status < 7
@@ -245,7 +247,7 @@ export default function Tasks() {
                     <input className="input" placeholder={t('tasks.branch_placeholder')} value={taskBranch} onChange={e => setTaskBranch(e.target.value)} />
                     {taskBranch && <div className="field-hint">{t('tasks.branch')}: {taskBranch}</div>}
                   </div>
-                  {runners.length > 0 && (
+                  {runners.length > 1 && (
                     <div className="field">
                       <label className="field-label">{t('runners.select_label')}</label>
                       <select

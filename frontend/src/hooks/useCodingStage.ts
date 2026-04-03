@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { getTask, getTodos, getTaskDiff, getTodoDiff, joinDiffs, executeTodo, runAllTodos, TaskData, TodoData } from '../api'
+import { getTask, getTodos, getTaskDiff, getTodoDiff, joinDiffs, executeTodo, runAllTodos, cancelRunAll, TaskData, TodoData } from '../api'
 import { SessionStatus, TodoStatus } from '../types/enums'
 import { sessionIds } from '../utils/sessionIds'
 import { useAgent } from './useAgent'
@@ -89,19 +89,27 @@ export function useCodingStage(taskId: string | undefined) {
     }
   }, [selectedTodo, todos, fetchTodoDiff])
 
+  // Guard to skip stale debounced fetch results
+  const fetchGenRef = useRef(0)
+
   const onUpdated = useCallback(async (event: WSEvent) => {
     if (event.type === 'code_updated' && taskId) {
       // During execution, use task-level diff (uncommitted changes)
       if (debounceRef.current) clearTimeout(debounceRef.current)
       debounceRef.current = setTimeout(async () => {
+        const gen = ++fetchGenRef.current
         try {
           const diffData = await getTaskDiff(taskId)
+          if (gen !== fetchGenRef.current) return // stale response, skip
           const allDiffs = joinDiffs(diffData)
           setDiff(allDiffs)
           const td = await getTodos(taskId)
+          if (gen !== fetchGenRef.current) return
           setTodos(td)
         } catch (err: any) {
-          setLocalError(err.message || 'Failed to refresh diff')
+          if (gen === fetchGenRef.current) {
+            setLocalError(err.message || 'Failed to refresh diff')
+          }
         }
       }, CODE_UPDATE_DEBOUNCE_MS)
     }
@@ -175,6 +183,12 @@ export function useCodingStage(taskId: string | undefined) {
     }
   }, [taskId])
 
+  /** Cancel the run-all loop. Current todo will finish before stopping. */
+  const cancelAll = useCallback(async () => {
+    if (!taskId) return
+    await cancelRunAll(taskId)
+  }, [taskId])
+
   return {
     task,
     todos,
@@ -182,6 +196,7 @@ export function useCodingStage(taskId: string | undefined) {
     setSelectedTodo,
     execute,
     executeAll,
+    cancelAll,
     isRunAllInProgress,
     diff,
     todoSessionStatus: agent.status,

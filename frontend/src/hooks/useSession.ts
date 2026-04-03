@@ -52,15 +52,20 @@ export function useSession(sessionId: string | null, refreshKey?: number) {
   // Use ref to accumulate logs and rAF to batch updates
   const logsRef = useRef<SessionEvent[]>([])
   const rafRef = useRef<number | null>(null)
+  const mountedRef = useRef(true)
 
   const flushLogs = useCallback(() => {
     rafRef.current = null
-    setLogs([...logsRef.current])
+    if (mountedRef.current) {
+      setLogs([...logsRef.current])
+    }
   }, [])
 
   // Cleanup rAF on unmount
   useEffect(() => {
+    mountedRef.current = true
     return () => {
+      mountedRef.current = false
       if (rafRef.current !== null) {
         cancelAnimationFrame(rafRef.current)
         rafRef.current = null

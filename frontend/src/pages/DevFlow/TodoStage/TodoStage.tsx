@@ -135,12 +135,21 @@ export default function TodoStage() {
         }
         actions={
           <>
-            <button className="btn btn-primary" onClick={handleStartCoding} disabled={startCodingDisabled}>
-              {t('todo.start_coding')}
-            </button>
-            <button className="btn btn-ghost" onClick={handleRedecompose} disabled={redecomposeDisabled}>
-              {t('todo.redecompose')}
-            </button>
+            <span className="btn-with-tooltip">
+              <button className="btn btn-primary" onClick={handleStartCoding} disabled={startCodingDisabled}>
+                {t('todo.start_coding')}
+              </button>
+              {startCodingDisabled && !readonly && todos.length === 0 && (
+                <span className="btn-tooltip">{t('tooltip.need_todos')}</span>
+              )}
+              {readonly && <span className="btn-tooltip">{t('tooltip.readonly')}</span>}
+            </span>
+            <span className="btn-with-tooltip">
+              <button className="btn btn-ghost" onClick={handleRedecompose} disabled={redecomposeDisabled}>
+                {t('todo.redecompose')}
+              </button>
+              {readonly && <span className="btn-tooltip">{t('tooltip.readonly')}</span>}
+            </span>
           </>
         }
         chatTitle={t('todo.chat_title')}

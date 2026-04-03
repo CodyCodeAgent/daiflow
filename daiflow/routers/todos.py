@@ -16,15 +16,21 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/todos", tags=["todos"])
 
 
+async def _get_todo_or_404(db: AsyncSession, todo_id: str) -> Todo:
+    """Look up a todo by ID, raise 404 if not found."""
+    todo = await db.get(Todo, todo_id)
+    if not todo:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    return todo
+
+
 @router.post("/{todo_id}/execute")
 async def execute_todo_route(
     todo_id: str,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
 ):
-    todo = await db.get(Todo, todo_id)
-    if not todo:
-        raise HTTPException(status_code=404, detail="Todo not found")
+    todo = await _get_todo_or_404(db, todo_id)
 
     task = await db.get(Task, todo.task_id)
     if not task:
@@ -61,9 +67,7 @@ async def skip_todo_route(
     todo_id: str,
     db: AsyncSession = Depends(get_db),
 ):
-    todo = await db.get(Todo, todo_id)
-    if not todo:
-        raise HTTPException(status_code=404, detail="Todo not found")
+    todo = await _get_todo_or_404(db, todo_id)
 
     task = await db.get(Task, todo.task_id)
     if not task:
@@ -86,9 +90,7 @@ async def skip_todo_route(
 @router.get("/{todo_id}/diff")
 async def get_todo_diff(todo_id: str, db: AsyncSession = Depends(get_db)):
     """Get the diff produced by a specific todo execution."""
-    todo = await db.get(Todo, todo_id)
-    if not todo:
-        raise HTTPException(status_code=404, detail="Todo not found")
+    todo = await _get_todo_or_404(db, todo_id)
 
     before = json.loads(todo.commit_before or "{}")
     after = json.loads(todo.commit_after or "{}")

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import StageLayout, { isStageReadonly } from '../../../components/StageLayout/StageLayout'
 import DiffViewer from '../../../components/DiffViewer/DiffViewer'
+import Modal from '../../../components/Modal/Modal'
 import { useCodingStage } from '../../../hooks/useCodingStage'
 import { useDevServer } from '../../../hooks/useDevServer'
 import { skipTodo, startReview } from '../../../api'
@@ -16,12 +17,13 @@ export default function CodingStage() {
   const { t } = useLocale()
   const toast = useToast()
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
 
   const {
     task, todos, selectedTodo, setSelectedTodo, diff,
     todoSessionStatus, allDone, loadData, isStale,
     messages, sendMessage, responding, cancelling, stopGeneration, execute,
-    isRunAllInProgress, executeAll,
+    isRunAllInProgress, executeAll, cancelAll,
   } = useCodingStage(taskId)
 
   const handleExecute = (todoId: string) => execute(todoId)
@@ -61,6 +63,7 @@ export default function CodingStage() {
   const nextActionableId = anyRunning ? null : (todos.find(t => t.status === 0 || t.status === 3)?.id ?? null)
 
   return (
+    <>
     <StageLayout
       taskId={taskId!}
       task={task}
@@ -81,7 +84,15 @@ export default function CodingStage() {
                 </button>
               )}
               {isRunAllInProgress && (
-                <span className="run-all-indicator">{t('coding.running_all')}</span>
+                <>
+                  <span className="run-all-indicator">{t('coding.running_all')}</span>
+                  <button
+                    className="btn btn-ghost btn-xs"
+                    onClick={() => setShowCancelConfirm(true)}
+                  >
+                    {t('coding.cancel_run_all')}
+                  </button>
+                </>
               )}
             </div>
             <div className="timeline-list">
@@ -145,6 +156,9 @@ export default function CodingStage() {
                             {t('coding.skip')}
                           </button>
                         </div>
+                      )}
+                      {!isActionable && isPending && !isRunAllInProgress && (
+                        <div className="tl-wait-hint">{t('todo.needs_previous')}</div>
                       )}
                     </div>
                   </div>
@@ -227,5 +241,25 @@ export default function CodingStage() {
       chatDisabled={isRunAllInProgress}
       isStale={isStale}
     />
+
+    {/* Cancel Run All Confirmation */}
+    <Modal open={showCancelConfirm} onClose={() => setShowCancelConfirm(false)} width={420}>
+      <div className="modal-title">{t('coding.cancel_confirm_title')}</div>
+      <p style={{ fontSize: '13px', color: 'var(--t1)', lineHeight: 1.6, margin: '12px 0 20px' }}>
+        {t('coding.cancel_confirm_body')}
+      </p>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+        <button className="btn btn-ghost" onClick={() => setShowCancelConfirm(false)}>
+          {t('coding.cancel_confirm_cancel')}
+        </button>
+        <button className="btn btn-danger" onClick={async () => {
+          setShowCancelConfirm(false)
+          try { await cancelAll() } catch (err: any) { toast.error(err.message || t('toast.operation_failed')) }
+        }}>
+          {t('coding.cancel_confirm_ok')}
+        </button>
+      </div>
+    </Modal>
+    </>
   )
 }

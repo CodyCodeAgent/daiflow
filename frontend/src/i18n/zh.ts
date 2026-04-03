@@ -187,6 +187,7 @@ const zh: Record<TranslationKey, string> = {
   'init_stage.desc': '正在准备开发环境...',
   'init_stage.fetch_code': '获取代码',
   'init_stage.sync_skills': '同步技能',
+  'init_stage.sync_commands': '同步命令',
   'init_stage.completed': '初始化完成',
   'init_stage.in_progress': '初始化中',
   'init_stage.failed': '初始化失败',
@@ -265,6 +266,11 @@ const zh: Record<TranslationKey, string> = {
   'coding.status.skipped': '已跳过',
   'coding.run_all': '一键运行',
   'coding.running_all': '运行中...',
+  'coding.cancel_run_all': '取消',
+  'coding.cancel_confirm_title': '取消一键运行',
+  'coding.cancel_confirm_body': '当前正在执行的 Todo 将会完成后才停止，后续 Todo 将不再执行。',
+  'coding.cancel_confirm_ok': '确认取消',
+  'coding.cancel_confirm_cancel': '继续运行',
   'coding.chat_title': '编码对话',
 
   // ReviewStage
@@ -419,6 +425,33 @@ const zh: Record<TranslationKey, string> = {
   'form.dev_port_placeholder': '5173',
   'form.dev_preview_url': '预览地址',
   'form.dev_preview_url_placeholder': '留空则使用 localhost:{port}',
+
+  // Tool Approval
+  'tool_approval.accept': '接受变更',
+  'tool_approval.revert': '撤销变更',
+
+  // DiffViewer
+  'diff.search_placeholder': '过滤文件...',
+  'diff.no_matches': '没有匹配的文件',
+  'diff.copied': '已复制！',
+
+  // Tooltips
+  'tooltip.readonly': '此阶段已完成，仅供查看',
+  'tooltip.need_plan': '请先生成并锁定技术方案',
+  'tooltip.need_todos': '请先生成 Todo',
+  'tooltip.need_spec': '请先生成功能规格',
+  'tooltip.generating': '正在生成中...',
+
+  // TodoStage
+  'todo.needs_previous': '需先完成前面的 Todo',
+
+  // PreviewPanel
+  'preview.loading': '正在加载预览...',
+
+  // ReviewStage
+  'review.step_generating': '正在生成提交信息...',
+  'review.step_committing': '正在提交变更...',
+  'review.step_pushing': '正在推送到远程...',
 
   // Toast
   'toast.operation_failed': '操作失败',

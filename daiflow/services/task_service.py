@@ -28,11 +28,20 @@ logger = logging.getLogger(__name__)
 # In-memory set tracking tasks currently under run-all execution.
 # Cleared on server restart (correct: the loop is also gone after restart).
 _running_all_tasks: set[str] = set()
+_cancel_run_all_tasks: set[str] = set()
 
 
 def is_running_all(task_id: str) -> bool:
     """Return True if a run-all-todos loop is currently active for this task."""
     return task_id in _running_all_tasks
+
+
+def cancel_running_all(task_id: str) -> bool:
+    """Request cancellation of a run-all loop. Returns True if was running."""
+    if task_id not in _running_all_tasks:
+        return False
+    _cancel_run_all_tasks.add(task_id)
+    return True
 
 
 async def fetch_project_repos(db: AsyncSession, project_id: str) -> list:
@@ -387,8 +396,13 @@ async def run_all_todos(task_id: str) -> None:
     from transitions.core import MachineError
 
     _running_all_tasks.add(task_id)
+    _cancel_run_all_tasks.discard(task_id)
     try:
         while True:
+            # Check for cancellation between todo executions
+            if task_id in _cancel_run_all_tasks:
+                logger.info("run_all_todos: cancelled by user for task %s", task_id)
+                break
             todo_id: str | None = None
             async with get_background_db() as db:
                 task = await db.get(Task, task_id)
@@ -428,3 +442,4 @@ async def run_all_todos(task_id: str) -> None:
         logger.exception("run_all_todos failed for task %s", task_id)
     finally:
         _running_all_tasks.discard(task_id)
+        _cancel_run_all_tasks.discard(task_id)

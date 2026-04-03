@@ -88,7 +88,9 @@ async def _recover_interrupted_sessions():
                 wf = TodoWorkflow(todo, db)
                 await wf.fail()
             except Exception:
-                todo.status = TodoStatus.FAILED
+                # Direct assignment is intentional: recovery fallback when
+                # the state machine cannot handle the todo's current state.
+                todo.status = TodoStatus.FAILED  # noqa: direct-status (recovery)
             stuck_count += 1
         if stuck_count:
             logger.info("Reset %d stuck RUNNING todo(s) to FAILED", stuck_count)

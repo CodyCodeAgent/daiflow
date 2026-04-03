@@ -12,6 +12,7 @@ from daiflow.config import SESSIONS_DIR, safe_filename
 from daiflow.database import get_db
 from daiflow.models import Session, SessionStatus, Task, TaskStatus, Todo, TodoStatus
 from daiflow.schemas import SessionStatusResponse
+from transitions.core import MachineError
 
 logger = logging.getLogger(__name__)
 
@@ -84,9 +85,11 @@ async def _sync_associated_entity(session: Session, db: AsyncSession) -> list[st
                     wf = TodoWorkflow(todo, db)
                     await wf.fail()
                     changes.append(f"Todo: {old} → FAILED")
-                except Exception:
-                    # Fallback if state machine rejects (e.g. not in RUNNING)
-                    todo.status = TodoStatus.FAILED
+                except (Exception, MachineError):
+                    # Fallback if state machine rejects (e.g. not in RUNNING).
+                    # Direct assignment is intentional here as a last-resort recovery
+                    # when the state machine cannot handle the current state.
+                    todo.status = TodoStatus.FAILED  # noqa: direct-status (recovery fallback)
                     changes.append(f"Todo: {old} → FAILED (forced)")
 
     elif session.type == "plan" and session.task_id:

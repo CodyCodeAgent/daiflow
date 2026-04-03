@@ -56,7 +56,7 @@ export default function ProjectForm({
   const [runnerId, setRunnerId] = useState<string | null>(initialRunnerId)
 
   useEffect(() => {
-    listRunners().then(setRunners).catch(() => {})
+    listRunners().then(setRunners).catch(err => console.error('Failed to load runners:', err))
   }, [])
 
   const addRepo = () => {

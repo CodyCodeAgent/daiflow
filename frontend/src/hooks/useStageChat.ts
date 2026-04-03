@@ -95,6 +95,9 @@ export function useStageChat({ sessionId, stage, entityId, onUpdated, sessionLog
   const [userHasChatted, setUserHasChatted] = useState(false)
   const cancelRef = useRef<(() => void) | null>(null)
   const reqIdRef = useRef<string | null>(null)
+  // Ref to avoid stale closure: onUpdated may change while streaming is active
+  const onUpdatedRef = useRef(onUpdated)
+  onUpdatedRef.current = onUpdated
 
   // Refs for rAF-throttled streaming updates
   const aiContentRef = useRef('')
@@ -182,7 +185,7 @@ export function useStageChat({ sessionId, stage, entityId, onUpdated, sessionLog
         aiReviewsRef.current = aiReviewsRef.current.filter(r => r.callId !== event.call_id)
         scheduleFlush()
       } else if (event.type === 'plan_updated' || event.type === 'todo_updated' || event.type === 'code_updated') {
-        onUpdated?.(event)
+        onUpdatedRef.current?.(event)
       } else if (event.type === 'error') {
         aiContentRef.current += `\n\n[Error: ${event.content || 'Unknown error'}]`
         // Treat error as terminal — stop streaming and finalize message
@@ -223,7 +226,7 @@ export function useStageChat({ sessionId, stage, entityId, onUpdated, sessionLog
     }, { contextFiles: opts?.contextFiles, images: opts?.images })
     cancelRef.current = cancel
     reqIdRef.current = reqId
-  }, [stage, entityId, streaming, onUpdated, scheduleFlush, flushAIMessage])
+  }, [stage, entityId, streaming, scheduleFlush, flushAIMessage])
 
   const stopGeneration = useCallback(() => {
     if (!streaming || cancelling) return

@@ -22,6 +22,7 @@ from daiflow.services.task_service import (
     generate_todos,
     init_task,
     is_running_all,
+    cancel_running_all,
     run_all_todos,
 )
 from daiflow.workflow import TaskWorkflow
@@ -42,6 +43,14 @@ def _task_to_dict(t: Task) -> dict:
     return TaskResponse.model_validate(t).model_dump()
 
 
+async def _get_task_or_404(db: AsyncSession, task_id: str) -> Task:
+    """Look up a task by ID, raise 404 if not found."""
+    task = await db.get(Task, task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return task
+
+
 # ── CRUD ──
 
 
@@ -58,9 +67,7 @@ async def list_tasks(
 
 @router.get("/{task_id}")
 async def get_task(task_id: str, db: AsyncSession = Depends(get_db)):
-    task = await db.get(Task, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    task = await _get_task_or_404(db, task_id)
     result = _task_to_dict(task)
     result["run_all_in_progress"] = is_running_all(task_id)
     return result
@@ -111,9 +118,7 @@ async def create_task(
 async def update_task(
     task_id: str, data: TaskUpdate, db: AsyncSession = Depends(get_db)
 ):
-    task = await db.get(Task, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    task = await _get_task_or_404(db, task_id)
 
     # Only allow updating user-editable fields (not workflow-controlled ones)
     editable_fields = {"name", "description", "branch", "prd", "prd_doc_url", "tech_plan", "tech_doc_url", "runner_id"}
@@ -150,9 +155,7 @@ async def upload_prd_image(
     db: AsyncSession = Depends(get_db),
 ):
     """Upload an image for the task's PRD. Returns the image filename."""
-    task = await db.get(Task, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    task = await _get_task_or_404(db, task_id)
 
     if file.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(status_code=400, detail=f"Unsupported image type: {file.content_type}")
@@ -190,9 +193,7 @@ async def delete_prd_image(
     db: AsyncSession = Depends(get_db),
 ):
     """Delete a PRD image by filename."""
-    task = await db.get(Task, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    task = await _get_task_or_404(db, task_id)
 
     images: list = json.loads(task.prd_images or "[]")
     if filename not in images:
@@ -213,9 +214,7 @@ async def delete_prd_image(
 
 @router.delete("/{task_id}")
 async def delete_task(task_id: str, db: AsyncSession = Depends(get_db)):
-    task = await db.get(Task, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    task = await _get_task_or_404(db, task_id)
     await db.delete(task)
     await db.commit()
 
@@ -235,9 +234,7 @@ async def lock_plan(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
 ):
-    task = await db.get(Task, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    task = await _get_task_or_404(db, task_id)
 
     try:
         await lock_plan_and_generate_todos(db, task)
@@ -251,9 +248,7 @@ async def lock_plan(
 
 @router.post("/{task_id}/start-coding")
 async def start_coding_route(task_id: str, db: AsyncSession = Depends(get_db)):
-    task = await db.get(Task, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    task = await _get_task_or_404(db, task_id)
 
     try:
         await start_coding_stage(db, task)
@@ -269,9 +264,7 @@ async def run_all_todos_route(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
 ):
-    task = await db.get(Task, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    task = await _get_task_or_404(db, task_id)
     if task.status != TaskStatus.CODING:
         raise HTTPException(status_code=400, detail="Task is not in coding stage")
 
@@ -286,11 +279,17 @@ async def run_all_todos_route(
     return {"ok": True}
 
 
+@router.post("/{task_id}/cancel-run-all")
+async def cancel_run_all_route(task_id: str):
+    """Cancel a running run-all-todos loop. The current todo will finish first."""
+    if not cancel_running_all(task_id):
+        raise HTTPException(status_code=400, detail="No run-all in progress for this task")
+    return {"ok": True}
+
+
 @router.post("/{task_id}/start-review")
 async def start_review(task_id: str, db: AsyncSession = Depends(get_db)):
-    task = await db.get(Task, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    task = await _get_task_or_404(db, task_id)
 
     try:
         await start_review_stage(db, task)
@@ -310,9 +309,7 @@ async def confirm_init(
     db: AsyncSession = Depends(get_db),
 ):
     """User confirms init is done, transition INITIALIZING → PLANNING and start plan generation."""
-    task = await db.get(Task, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    task = await _get_task_or_404(db, task_id)
 
     if task.status != TaskStatus.INITIALIZING:
         raise HTTPException(
@@ -336,9 +333,7 @@ async def retry_init(
     db: AsyncSession = Depends(get_db),
 ):
     """Retry init after failure. Task must be in CREATED state (reset by failed init)."""
-    task = await db.get(Task, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    task = await _get_task_or_404(db, task_id)
 
     if task.status != TaskStatus.CREATED:
         raise HTTPException(
@@ -393,9 +388,7 @@ async def trigger_spec(
 
     Task must be in PLANNING state.  Runs the spec agent in the background.
     """
-    task = await db.get(Task, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    task = await _get_task_or_404(db, task_id)
     if task.status != TaskStatus.PLANNING:
         raise HTTPException(
             status_code=400,
@@ -414,9 +407,7 @@ async def trigger_plan(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
 ):
-    task = await db.get(Task, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    task = await _get_task_or_404(db, task_id)
     # Only allow plan generation in PLANNING state
     if task.status != TaskStatus.PLANNING:
         raise HTTPException(
@@ -436,9 +427,7 @@ async def trigger_todo(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
 ):
-    task = await db.get(Task, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    task = await _get_task_or_404(db, task_id)
     # Only allow todo generation in PLAN_LOCKED state
     if task.status != TaskStatus.PLAN_LOCKED:
         raise HTTPException(
@@ -464,9 +453,7 @@ async def get_todos(task_id: str, db: AsyncSession = Depends(get_db)):
 
 @router.get("/{task_id}/diff")
 async def get_task_diff(task_id: str, db: AsyncSession = Depends(get_db)):
-    task = await db.get(Task, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    task = await _get_task_or_404(db, task_id)
     diffs = await review_service.get_task_diffs(db, task)
     return {"diffs": diffs}
 
@@ -474,9 +461,7 @@ async def get_task_diff(task_id: str, db: AsyncSession = Depends(get_db)):
 @router.post("/{task_id}/generate-commit-message")
 async def generate_commit_message_route(task_id: str, db: AsyncSession = Depends(get_db)):
     """Generate a commit message from the task's diff using AI."""
-    task = await db.get(Task, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    task = await _get_task_or_404(db, task_id)
     msg = await review_service.generate_commit_message(db, task)
     return {"commit_message": msg}
 
@@ -485,9 +470,7 @@ async def generate_commit_message_route(task_id: str, db: AsyncSession = Depends
 async def submit_mr_route(
     task_id: str, data: SubmitMR, db: AsyncSession = Depends(get_db)
 ):
-    task = await db.get(Task, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    task = await _get_task_or_404(db, task_id)
 
     results = await review_service.submit_mr(db, task, data.commit_message)
 
@@ -507,9 +490,7 @@ async def submit_mr_route(
 @router.post("/{task_id}/dev-server/start")
 async def start_dev_server(task_id: str, request: Request, db: AsyncSession = Depends(get_db)):
     """Start the dev server for a task's frontend repo."""
-    task = await db.get(Task, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    task = await _get_task_or_404(db, task_id)
 
     from daiflow.services.task_service import fetch_project_repos, resolve_repo_path
     repos = await fetch_project_repos(db, task.project_id)
@@ -624,9 +605,7 @@ async def get_task_artifact(
     For 'constitution', the content is read from the project-level directory.
     Returns {"content": str, "exists": bool}.
     """
-    task = await db.get(Task, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+    task = await _get_task_or_404(db, task_id)
 
     task_dir = TASKS_DIR / task_id
 

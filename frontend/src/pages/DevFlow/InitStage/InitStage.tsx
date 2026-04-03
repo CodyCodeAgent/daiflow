@@ -195,6 +195,9 @@ export default function InitStage() {
                           <div className="know-desc">{key}</div>
                         </div>
                         <div className="know-status">{t(statusKeys[s.status])}</div>
+                        {s.status === 3 && s.error && (
+                          <div className="know-error">{String(s.error).slice(0, 120)}</div>
+                        )}
                       </div>
                     </div>
                     {i < sessions.length - 1 && <div className="layer-connector" />}

@@ -39,6 +39,9 @@ Thumbs.db
 # Logs
 *.log
 
+# TypeScript build info
+*.tsbuildinfo
+
 # Vite / frontend build
 frontend/dist/
 

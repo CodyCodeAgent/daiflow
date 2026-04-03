@@ -95,7 +95,10 @@ export default function Settings() {
 
   const loadRunners = () => {
     setRunnersLoading(true)
-    listRunners().then(setRunners).catch(() => setRunners([])).finally(() => setRunnersLoading(false))
+    listRunners().then(setRunners).catch((err) => {
+      console.error('Failed to load runners:', err)
+      setRunners([])
+    }).finally(() => setRunnersLoading(false))
   }
 
   useEffect(() => {
@@ -107,7 +110,7 @@ export default function Settings() {
       if (data.tool_approval_mode && ['auto', 'high_risk', 'all'].includes(data.tool_approval_mode)) {
         setApprovalMode(data.tool_approval_mode as 'auto' | 'high_risk' | 'all')
       }
-    }).catch(() => {})
+    }).catch((err) => { console.error('Failed to load settings:', err) })
   }, [])
 
   const openAdd = () => {
@@ -290,18 +293,6 @@ export default function Settings() {
                   中文
                 </button>
               </div>
-            </div>
-          </div>
-
-          <div className="section-head">{t('settings.language')}</div>
-          <div className="theme-switch">
-            <div className={`theme-option ${locale === 'en' ? 'selected' : ''}`} onClick={() => handleLocaleChange('en')}>
-              <div className="theme-option-icon">EN</div>
-              <div className="theme-option-label">{t('settings.lang_en')}</div>
-            </div>
-            <div className={`theme-option ${locale === 'zh' ? 'selected' : ''}`} onClick={() => handleLocaleChange('zh')}>
-              <div className="theme-option-icon">中</div>
-              <div className="theme-option-label">{t('settings.lang_zh')}</div>
             </div>
           </div>
 
