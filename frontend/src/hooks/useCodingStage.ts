@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { getTask, getTodos, getTaskDiff, getTodoDiff, joinDiffs, executeTodo, runAllTodos, TaskData, TodoData } from '../api'
+import { getTask, getTodos, getTaskDiff, getTodoDiff, joinDiffs, executeTodo, runAllTodos, cancelRunAll, TaskData, TodoData } from '../api'
 import { SessionStatus, TodoStatus } from '../types/enums'
 import { sessionIds } from '../utils/sessionIds'
 import { useAgent } from './useAgent'
@@ -175,6 +175,12 @@ export function useCodingStage(taskId: string | undefined) {
     }
   }, [taskId])
 
+  /** Cancel the run-all loop. Current todo will finish before stopping. */
+  const cancelAll = useCallback(async () => {
+    if (!taskId) return
+    await cancelRunAll(taskId)
+  }, [taskId])
+
   return {
     task,
     todos,
@@ -182,6 +188,7 @@ export function useCodingStage(taskId: string | undefined) {
     setSelectedTodo,
     execute,
     executeAll,
+    cancelAll,
     isRunAllInProgress,
     diff,
     todoSessionStatus: agent.status,

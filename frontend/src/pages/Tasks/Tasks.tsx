@@ -245,7 +245,7 @@ export default function Tasks() {
                     <input className="input" placeholder={t('tasks.branch_placeholder')} value={taskBranch} onChange={e => setTaskBranch(e.target.value)} />
                     {taskBranch && <div className="field-hint">{t('tasks.branch')}: {taskBranch}</div>}
                   </div>
-                  {runners.length > 0 && (
+                  {runners.length > 1 && (
                     <div className="field">
                       <label className="field-label">{t('runners.select_label')}</label>
                       <select

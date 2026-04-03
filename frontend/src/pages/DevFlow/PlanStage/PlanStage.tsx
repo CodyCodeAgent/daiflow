@@ -175,8 +175,9 @@ export default function PlanStage() {
     if (!hasSpec && !readonly) {
       return (
         <div style={{ padding: '32px 0', textAlign: 'center' }}>
-          <div style={{ fontSize: '28px', marginBottom: '12px' }}>🔒</div>
-          <p style={{ fontSize: '14px', color: 'var(--t2)', marginBottom: '8px' }}>{t('plan.blocked_by_spec')}</p>
+          <div style={{ fontSize: '28px', marginBottom: '12px', opacity: 0.6 }}>&#128274;</div>
+          <p style={{ fontSize: '14px', color: 'var(--t1)', marginBottom: '4px', fontWeight: 500 }}>{t('plan.blocked_by_spec')}</p>
+          <p style={{ fontSize: '12px', color: 'var(--t3)', marginBottom: '16px' }}>{t('spec.hint')}</p>
           <button className="btn btn-primary" onClick={() => setActiveTab('spec')}>
             {t('spec.generate')}
           </button>
@@ -264,12 +265,26 @@ export default function PlanStage() {
       }
       actions={
         <>
-          <button className="btn btn-primary" onClick={handleLockPlan} disabled={lockDisabled}>
-            {t('plan.lock')}
-          </button>
-          <button className="btn btn-ghost" onClick={handleRegenerate} disabled={regenerateDisabled}>
-            {t('plan.regenerate')}
-          </button>
+          <span className="btn-with-tooltip">
+            <button className="btn btn-primary" onClick={handleLockPlan} disabled={lockDisabled}>
+              {t('plan.lock')}
+            </button>
+            {lockDisabled && !readonly && (
+              <span className="btn-tooltip">
+                {isGenerating ? t('tooltip.generating') : !planContent ? t('tooltip.need_plan') : ''}
+              </span>
+            )}
+            {readonly && <span className="btn-tooltip">{t('tooltip.readonly')}</span>}
+          </span>
+          <span className="btn-with-tooltip">
+            <button className="btn btn-ghost" onClick={handleRegenerate} disabled={regenerateDisabled}>
+              {t('plan.regenerate')}
+            </button>
+            {regenerateDisabled && !readonly && !hasSpec && (
+              <span className="btn-tooltip">{t('tooltip.need_spec')}</span>
+            )}
+            {readonly && <span className="btn-tooltip">{t('tooltip.readonly')}</span>}
+          </span>
         </>
       }
       chatTitle={useSpecChat ? t('spec.chat_title') : t('plan.chat_title')}

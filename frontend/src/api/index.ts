@@ -309,6 +309,8 @@ export const skipTodo = (todoId: string) =>
   request<{ ok: boolean }>(`/todos/${todoId}/skip`, { method: 'POST' })
 export const runAllTodos = (taskId: string) =>
   request<{ ok: boolean }>(`/tasks/${taskId}/run-all-todos`, { method: 'POST' })
+export const cancelRunAll = (taskId: string) =>
+  request<{ ok: boolean }>(`/tasks/${taskId}/cancel-run-all`, { method: 'POST' })
 export const getTodoDiff = (todoId: string) =>
   request<DiffData>(`/todos/${todoId}/diff`)
 

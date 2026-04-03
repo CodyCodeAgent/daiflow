@@ -22,6 +22,7 @@ from daiflow.services.task_service import (
     generate_todos,
     init_task,
     is_running_all,
+    cancel_running_all,
     run_all_todos,
 )
 from daiflow.workflow import TaskWorkflow
@@ -283,6 +284,14 @@ async def run_all_todos_route(
         raise HTTPException(status_code=400, detail="A todo is already running")
 
     background_tasks.add_task(run_all_todos, task_id)
+    return {"ok": True}
+
+
+@router.post("/{task_id}/cancel-run-all")
+async def cancel_run_all_route(task_id: str):
+    """Cancel a running run-all-todos loop. The current todo will finish first."""
+    if not cancel_running_all(task_id):
+        raise HTTPException(status_code=400, detail="No run-all in progress for this task")
     return {"ok": True}
 
 

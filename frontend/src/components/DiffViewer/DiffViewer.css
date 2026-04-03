@@ -101,6 +101,51 @@
   color: var(--red);
 }
 
+/* ── Toolbar ── */
+
+.diff-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.diff-search-input {
+  flex: 0 1 220px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-family: var(--mono);
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--t1);
+  outline: none;
+}
+
+.diff-search-input:focus {
+  border-color: var(--blue);
+}
+
+.diff-copy-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--t3);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 4px;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.diff-file-header:hover .diff-copy-btn {
+  opacity: 1;
+}
+
+.diff-copy-btn:hover {
+  color: var(--t1);
+}
+
 /* ── Mode Toggle ── */
 
 .diff-mode-toggle {
@@ -110,6 +155,7 @@
   border: 1px solid var(--border);
   border-radius: var(--r2);
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .diff-mode-btn {

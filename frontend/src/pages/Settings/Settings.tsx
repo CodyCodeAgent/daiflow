@@ -293,18 +293,6 @@ export default function Settings() {
             </div>
           </div>
 
-          <div className="section-head">{t('settings.language')}</div>
-          <div className="theme-switch">
-            <div className={`theme-option ${locale === 'en' ? 'selected' : ''}`} onClick={() => handleLocaleChange('en')}>
-              <div className="theme-option-icon">EN</div>
-              <div className="theme-option-label">{t('settings.lang_en')}</div>
-            </div>
-            <div className={`theme-option ${locale === 'zh' ? 'selected' : ''}`} onClick={() => handleLocaleChange('zh')}>
-              <div className="theme-option-icon">中</div>
-              <div className="theme-option-label">{t('settings.lang_zh')}</div>
-            </div>
-          </div>
-
           <div className="section-head">{t('settings.tool_approval')}</div>
           <div className="theme-switch">
             <div className={`theme-option ${approvalMode === 'auto' ? 'selected' : ''}`} onClick={() => handleApprovalModeChange('auto')}>

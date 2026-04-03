@@ -3,6 +3,19 @@ import { useState, useRef, useCallback, useEffect, cloneElement, isValidElement 
 /** Minimum width before the right panel snaps to collapsed */
 const COLLAPSE_THRESHOLD = 60
 
+const STORAGE_KEY = 'daiflow-split-pane-width'
+
+function loadPersistedWidth(fallback: number): number {
+  try {
+    const val = localStorage.getItem(STORAGE_KEY)
+    if (val) {
+      const n = parseInt(val, 10)
+      if (!isNaN(n) && n > 0) return n
+    }
+  } catch {}
+  return fallback
+}
+
 interface ResizableSplitPaneProps {
   /** Left/main content */
   children: React.ReactNode
@@ -23,12 +36,12 @@ export default function ResizableSplitPane({
   minRightWidth = 240,
   maxRightWidth = 800,
 }: ResizableSplitPaneProps) {
-  const [rightWidth, setRightWidth] = useState(initialRightWidth)
+  const [rightWidth, setRightWidth] = useState(() => loadPersistedWidth(initialRightWidth))
   const [collapsed, setCollapsed] = useState(false)
   const dragging = useRef(false)
   const startX = useRef(0)
-  const startWidth = useRef(initialRightWidth)
-  const prevWidth = useRef(initialRightWidth)
+  const startWidth = useRef(loadPersistedWidth(initialRightWidth))
+  const prevWidth = useRef(loadPersistedWidth(initialRightWidth))
 
   const onMouseDown = useCallback((e: React.MouseEvent) => {
     dragging.current = true
@@ -59,6 +72,8 @@ export default function ResizableSplitPane({
         dragging.current = false
         document.body.style.cursor = ''
         document.body.style.userSelect = ''
+        // Persist the width
+        try { localStorage.setItem(STORAGE_KEY, String(prevWidth.current)) } catch {}
       }
     }
     document.addEventListener('mousemove', onMouseMove)

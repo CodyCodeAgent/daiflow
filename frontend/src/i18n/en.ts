@@ -185,6 +185,7 @@ const en = {
   'init_stage.desc': 'Preparing development environment...',
   'init_stage.fetch_code': 'Fetch Code',
   'init_stage.sync_skills': 'Sync Skills',
+  'init_stage.sync_commands': 'Sync Commands',
   'init_stage.completed': 'Completed',
   'init_stage.in_progress': 'In Progress',
   'init_stage.failed': 'Failed',
@@ -263,6 +264,11 @@ const en = {
   'coding.status.skipped': 'skipped',
   'coding.run_all': 'Run all',
   'coding.running_all': 'Running all...',
+  'coding.cancel_run_all': 'Cancel',
+  'coding.cancel_confirm_title': 'Cancel Run All',
+  'coding.cancel_confirm_body': 'The current todo will finish executing before stopping. Subsequent todos will not be started.',
+  'coding.cancel_confirm_ok': 'OK, Cancel',
+  'coding.cancel_confirm_cancel': 'Keep Running',
   'coding.chat_title': 'Coding Chat',
 
   // ReviewStage
@@ -417,6 +423,33 @@ const en = {
   'form.dev_port_placeholder': '5173',
   'form.dev_preview_url': 'Preview URL',
   'form.dev_preview_url_placeholder': 'Leave empty for localhost:{port}',
+
+  // Tool Approval
+  'tool_approval.accept': 'Accept Changes',
+  'tool_approval.revert': 'Undo Changes',
+
+  // DiffViewer
+  'diff.search_placeholder': 'Filter files...',
+  'diff.no_matches': 'No matching files',
+  'diff.copied': 'Copied!',
+
+  // Tooltips
+  'tooltip.readonly': 'This stage is completed and read-only',
+  'tooltip.need_plan': 'Generate and lock a plan first',
+  'tooltip.need_todos': 'Generate todos first',
+  'tooltip.need_spec': 'Generate the functional spec first',
+  'tooltip.generating': 'Generation in progress...',
+
+  // TodoStage
+  'todo.needs_previous': 'Complete previous todos first',
+
+  // PreviewPanel
+  'preview.loading': 'Loading preview...',
+
+  // ReviewStage
+  'review.step_generating': 'Generating commit message...',
+  'review.step_committing': 'Committing changes...',
+  'review.step_pushing': 'Pushing to remote...',
 
   // Toast
   'toast.operation_failed': 'Operation failed',
