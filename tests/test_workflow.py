@@ -394,8 +394,9 @@ class TestTodoWorkflow:
         await wf.skip()
         assert todo.status == TodoStatus.SKIPPED
 
-    async def test_missing_prev_seq_blocks_execute(self, db_session: AsyncSession):
-        """If seq=2 exists but seq=1 does not, execute should be blocked."""
+    async def test_missing_prev_seq_allows_execute(self, db_session: AsyncSession):
+        """If seq=2 exists but seq=1 does not (deleted), execute should be allowed
+        rather than permanently blocking the todo."""
         p = Project(name="proj")
         db_session.add(p)
         await db_session.flush()
@@ -409,5 +410,5 @@ class TestTodoWorkflow:
 
         wf = TodoWorkflow(todo, db_session)
         result = await wf.execute()
-        assert not result
-        assert wf.state == "pending"
+        assert result is True
+        assert wf.state == "running"

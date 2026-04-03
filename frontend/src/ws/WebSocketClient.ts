@@ -100,14 +100,8 @@ class WebSocketClient {
       this.reconnectAttempts = 0
       this.startPing()
 
-      // Re-subscribe to all active channels
+      // Re-subscribe to all active channels (includes any that were pending)
       for (const channel of this.subscriptions.keys()) {
-        this.send({ action: 'subscribe', channel })
-      }
-
-      // Subscribe to any channels queued while disconnected
-      for (const channel of this.pendingSubscribes) {
-        if (!this.subscriptions.has(channel)) continue
         this.send({ action: 'subscribe', channel })
       }
       this.pendingSubscribes = []
@@ -172,11 +166,15 @@ class WebSocketClient {
     if (!handlers) {
       handlers = new Set()
       this.subscriptions.set(channel, handlers)
-      // Send subscribe to server
+      // Send subscribe to server, or queue + trigger connect
       if (this.ws?.readyState === WebSocket.OPEN) {
         this.send({ action: 'subscribe', channel })
       } else {
         this.pendingSubscribes.push(channel)
+        // Ensure a connection attempt is in progress
+        if (!this.ws && !this.reconnectTimer) {
+          this.connect()
+        }
       }
     }
     handlers.add(handler)

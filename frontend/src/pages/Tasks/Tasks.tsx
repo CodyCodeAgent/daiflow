@@ -45,7 +45,7 @@ export default function Tasks() {
   useEffect(() => {
     listTasks(projectId).then(setTasks).catch(err => console.error('Failed to load tasks:', err))
     listProjects().then(setProjects).catch(err => console.error('Failed to load projects:', err))
-    listRunners().then(setRunners).catch(() => {})
+    listRunners().then(setRunners).catch(err => console.error('Failed to load runners:', err))
   }, [projectId])
 
   // Cleanup object URLs on unmount only (use ref to avoid stale closure)

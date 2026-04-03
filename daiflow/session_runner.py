@@ -134,15 +134,7 @@ class SessionRunner:
     ):
         """Execute an AI task with full lifecycle management.
 
-        Args:
-            db: Database session (must be an independent session for background tasks)
-            session_id: DaiFlow business session ID
-            prompt: The prompt to send to the runner (str or MultimodalPrompt)
-            extra_channels: Additional WebSocket channels to publish status to
-            on_tool_result: Optional callback(event) for detecting file writes
-            cody_session_id: Optional runner-native session ID to continue a previous conversation
-            language: Language code (e.g. 'zh', 'en') to append language instruction
-            on_before_done: Async callback invoked after stream ends but before status_change is pushed
+        Phases: prepare → stream → finalize (success or error).
         """
         if language and isinstance(prompt, str):
             prompt = prompt + LANGUAGE_INSTRUCTIONS.get(language, "")
@@ -150,144 +142,143 @@ class SessionRunner:
             prompt.text = prompt.text + LANGUAGE_INSTRUCTIONS.get(language, "")
         channel = f"session:{session_id}"
 
-        # Append run_boundary marker instead of deleting (preserves previous attempts)
+        await self._prepare(db, session_id, channel, prompt, extra_channels, cody_session_id)
+
+        try:
+            runner_sid, finished_at, done_ts = await self._stream(
+                session_id, channel, prompt, extra_channels,
+                on_tool_result, cody_session_id,
+            )
+            self._last_runner_session_id = runner_sid
+            await self._finalize_success(
+                db, session_id, channel, extra_channels,
+                runner_sid, finished_at, done_ts, on_before_done,
+            )
+        except Exception as e:
+            await self._finalize_error(
+                db, session_id, channel, extra_channels, e, on_before_done,
+            )
+
+    async def _prepare(self, db, session_id, channel, prompt, extra_channels, cody_session_id):
+        """Phase 1: Mark session RUNNING, log user message."""
         log_file = _log_path(session_id)
         if log_file.exists():
             await append_log(session_id, {"type": "run_boundary", "ts": _now_iso()})
 
-        # Update session status to running; store cody_session_id immediately if reusing
         run_started_at = _now()
         run_values = {"status": SessionStatus.RUNNING, "started_at": run_started_at}
         if cody_session_id:
             run_values["cody_session_id"] = cody_session_id
         await db.execute(
-            update(Session)
-            .where(Session.session_id == session_id)
-            .values(**run_values)
+            update(Session).where(Session.session_id == session_id).values(**run_values)
         )
         await db.commit()
 
-        # Notify extra channels (e.g. project init bus) that session started
         if extra_channels:
             for ch in extra_channels:
                 await self._ws.publish(ch, {
-                    "type": "session_status",
-                    "session_id": session_id,
-                    "status": SessionStatus.RUNNING,
-                    "started_at": utc_iso(run_started_at),
+                    "type": "session_status", "session_id": session_id,
+                    "status": SessionStatus.RUNNING, "started_at": utc_iso(run_started_at),
                 })
 
-        # Log user message (text + image filenames; base64 data is not logged)
         log_content = prompt.text if hasattr(prompt, "text") else prompt
         user_event = {"type": "user_message", "content": log_content, "ts": _now_iso()}
         if hasattr(prompt, "images") and prompt.images:
             user_event["images"] = [img.filename for img in prompt.images]
         await append_log(session_id, user_event)
 
-        try:
-            result_runner_session_id = None
-            done_finished_at = _now()  # Default; overwritten when done event arrives
-            done_ts = _now_iso()  # Default; overwritten when done event arrives
+    async def _stream(self, session_id, channel, prompt, extra_channels, on_tool_result, cody_session_id):
+        """Phase 2: Stream runner output, log events, publish to WS."""
+        result_runner_session_id = None
+        done_finished_at = _now()
+        done_ts = _now_iso()
 
-            async with asyncio.timeout(STREAM_TIMEOUT_SECONDS):
-                async for event in self.runner.stream(prompt, session_id=cody_session_id):
-                    if event["type"] == "compact":
-                        await append_log(session_id, {"type": "compact", "ts": _now_iso()})
-                        continue
+        async with asyncio.timeout(STREAM_TIMEOUT_SECONDS):
+            async for event in self.runner.stream(prompt, session_id=cody_session_id):
+                if event["type"] == "compact":
+                    await append_log(session_id, {"type": "compact", "ts": _now_iso()})
+                    continue
 
-                    event["ts"] = _now_iso()
-                    await append_log(session_id, event)
+                event["ts"] = _now_iso()
+                await append_log(session_id, event)
 
-                    if event["type"] == "done":
-                        result_runner_session_id = event.get("runner_session_id")
-                        done_finished_at = _now()
-                        done_ts = event["ts"]
-                        continue
+                if event["type"] == "done":
+                    result_runner_session_id = event.get("runner_session_id")
+                    done_finished_at = _now()
+                    done_ts = event["ts"]
+                    continue
 
-                    await self._ws.publish(channel, event)
+                await self._ws.publish(channel, event)
 
-                    skill_event = self._tracker.on_event(event)
-                    if skill_event:
-                        skill_event["ts"] = event["ts"]
-                        await append_log(session_id, skill_event)
-                        await self._ws.publish(channel, skill_event)
-                        if extra_channels:
-                            for ch in extra_channels:
-                                await self._ws.publish(ch, {**skill_event, "session_id": session_id})
-                    if event["type"] == "tool_result" and on_tool_result:
-                        self._tracker.enrich(event)
-                        extra_event = await on_tool_result(event)
-                        if extra_event:
-                            await append_log(session_id, extra_event)
-                            await self._ws.publish(channel, extra_event)
+                skill_event = self._tracker.on_event(event)
+                if skill_event:
+                    skill_event["ts"] = event["ts"]
+                    await append_log(session_id, skill_event)
+                    await self._ws.publish(channel, skill_event)
+                    if extra_channels:
+                        for ch in extra_channels:
+                            await self._ws.publish(ch, {**skill_event, "session_id": session_id})
+                if event["type"] == "tool_result" and on_tool_result:
+                    self._tracker.enrich(event)
+                    extra_event = await on_tool_result(event)
+                    if extra_event:
+                        await append_log(session_id, extra_event)
+                        await self._ws.publish(channel, extra_event)
 
-            self._last_runner_session_id = result_runner_session_id
+        return result_runner_session_id, done_finished_at, done_ts
 
-            # Update session to done
-            await db.execute(
-                update(Session)
-                .where(Session.session_id == session_id)
-                .values(
-                    status=SessionStatus.DONE,
-                    cody_session_id=result_runner_session_id,
-                    finished_at=done_finished_at,
-                )
+    async def _finalize_success(self, db, session_id, channel, extra_channels,
+                                runner_sid, finished_at, done_ts, on_before_done):
+        """Phase 3a: Persist DONE status, run hook, publish terminal event."""
+        await db.execute(
+            update(Session).where(Session.session_id == session_id).values(
+                status=SessionStatus.DONE, cody_session_id=runner_sid, finished_at=finished_at,
             )
-            await db.commit()
+        )
+        await db.commit()
 
-            # Run post-execution hook before publishing terminal event,
-            # so dependent DB writes (e.g. todo status) are visible to frontend.
-            if on_before_done:
+        if on_before_done:
+            await on_before_done()
+
+        status_event = {"type": "status_change", "status": SessionStatus.DONE, "ts": done_ts}
+        await self._ws.publish(channel, status_event)
+        await append_log(session_id, status_event)
+        if extra_channels:
+            for ch in extra_channels:
+                await self._ws.publish(ch, {
+                    "type": "session_status", "session_id": session_id,
+                    "status": SessionStatus.DONE, "finished_at": utc_iso(finished_at), "ts": done_ts,
+                })
+
+    async def _finalize_error(self, db, session_id, channel, extra_channels, error, on_before_done):
+        """Phase 3b: Persist FAILED status, run hook, publish terminal event."""
+        error_msg = traceback.format_exc()
+        error_event = {"type": "error", "content": str(error), "ts": _now_iso()}
+        await append_log(session_id, error_event)
+
+        failed_at = _now()
+        await db.execute(
+            update(Session).where(Session.session_id == session_id).values(
+                status=SessionStatus.FAILED, error=error_msg, finished_at=failed_at,
+            )
+        )
+        await db.commit()
+
+        if on_before_done:
+            try:
                 await on_before_done()
+            except Exception:
+                logger.exception("on_before_done failed in error path")
 
-            # Now publish status_change(DONE) — frontend can safely reload.
-            status_event = {"type": "status_change", "status": SessionStatus.DONE, "ts": done_ts}
-            await self._ws.publish(channel, status_event)
-            await append_log(session_id, status_event)
-            if extra_channels:
-                for ch in extra_channels:
-                    await self._ws.publish(ch, {
-                        "type": "session_status",
-                        "session_id": session_id,
-                        "status": SessionStatus.DONE,
-                        "finished_at": utc_iso(done_finished_at),
-                        "ts": done_ts,
-                    })
-
-        except Exception as e:
-            error_msg = traceback.format_exc()
-            error_event = {"type": "error", "content": str(e), "ts": _now_iso()}
-            await append_log(session_id, error_event)
-
-            failed_finished_at = _now()
-            await db.execute(
-                update(Session)
-                .where(Session.session_id == session_id)
-                .values(status=SessionStatus.FAILED, error=error_msg, finished_at=failed_finished_at)
-            )
-            await db.commit()
-
-            # Run post-execution hook before publishing terminal event
-            if on_before_done:
-                try:
-                    await on_before_done()
-                except Exception:
-                    logger.exception("on_before_done failed in error path")
-
-            # Now publish status_change(FAILED)
-            status_event = {"type": "status_change", "status": SessionStatus.FAILED, "error": str(e), "ts": _now_iso()}
-            await self._ws.publish(channel, status_event)
-
-            if extra_channels:
-                for ch in extra_channels:
-                    await self._ws.publish(ch, {
-                        "type": "session_status",
-                        "session_id": session_id,
-                        "status": SessionStatus.FAILED,
-                        "error": str(e),
-                        "finished_at": utc_iso(failed_finished_at),
-                        "ts": utc_iso(failed_finished_at),
-                    })
+        status_event = {"type": "status_change", "status": SessionStatus.FAILED, "error": str(error), "ts": _now_iso()}
+        await self._ws.publish(channel, status_event)
+        if extra_channels:
+            for ch in extra_channels:
+                await self._ws.publish(ch, {
+                    "type": "session_status", "session_id": session_id,
+                    "status": SessionStatus.FAILED, "error": str(error),
+                    "finished_at": utc_iso(failed_at), "ts": utc_iso(failed_at),
+                })
 
 
 def _inject_file_context(file_paths: list[str], session_id: str) -> str:

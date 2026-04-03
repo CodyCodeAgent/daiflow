@@ -44,6 +44,14 @@ async def _check_no_active_tasks(db: AsyncSession, project_id: str):
         )
 
 
+async def _get_project_or_404(db: AsyncSession, project_id: str) -> Project:
+    """Look up a project by ID, raise 404 if not found."""
+    p = await db.get(Project, project_id)
+    if not p:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return p
+
+
 def _project_to_dict(p: Project, repos: list | None = None) -> dict:
     """Serialize a Project + repos to dict. Repos must be passed explicitly to avoid lazy loading."""
     return ProjectResponse.model_validate({
@@ -66,9 +74,7 @@ async def list_projects(db: AsyncSession = Depends(get_db)):
 
 @router.get("/{project_id}")
 async def get_project(project_id: str, db: AsyncSession = Depends(get_db)):
-    p = await db.get(Project, project_id)
-    if not p:
-        raise HTTPException(status_code=404, detail="Project not found")
+    p = await _get_project_or_404(db, project_id)
     repos_result = await db.execute(
         select(ProjectRepo).where(ProjectRepo.project_id == p.id)
     )
@@ -113,9 +119,7 @@ async def create_project(data: ProjectCreate, db: AsyncSession = Depends(get_db)
 async def update_project(
     project_id: str, data: ProjectUpdate, db: AsyncSession = Depends(get_db)
 ):
-    project = await db.get(Project, project_id)
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
+    project = await _get_project_or_404(db, project_id)
 
     if data.name is not None:
         project.name = data.name
@@ -182,9 +186,7 @@ async def update_project(
 
 @router.delete("/{project_id}")
 async def delete_project(project_id: str, db: AsyncSession = Depends(get_db)):
-    project = await db.get(Project, project_id)
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
+    project = await _get_project_or_404(db, project_id)
 
     await db.delete(project)
     await db.commit()
@@ -204,9 +206,7 @@ async def init_project(
     db: AsyncSession = Depends(get_db),
 ):
     """Trigger project knowledge generation. Returns list of session records."""
-    project = await db.get(Project, project_id)
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
+    project = await _get_project_or_404(db, project_id)
 
     await _check_no_active_tasks(db, project_id)
 
@@ -231,9 +231,7 @@ async def retry_init(
     db: AsyncSession = Depends(get_db),
 ):
     """Retry failed init sessions + re-run all subsequent layers."""
-    project = await db.get(Project, project_id)
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
+    project = await _get_project_or_404(db, project_id)
 
     await _check_no_active_tasks(db, project_id)
 
@@ -291,9 +289,7 @@ async def get_init_sessions(project_id: str, db: AsyncSession = Depends(get_db))
 @router.get("/{project_id}/knowledge")
 async def get_project_knowledge(project_id: str, db: AsyncSession = Depends(get_db)):
     """Get project knowledge files (project.md + skills)."""
-    project = await db.get(Project, project_id)
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
+    project = await _get_project_or_404(db, project_id)
 
     project_dir = PROJECTS_DIR / project_id
     files: list[dict] = []

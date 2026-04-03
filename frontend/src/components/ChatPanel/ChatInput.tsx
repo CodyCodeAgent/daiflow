@@ -164,15 +164,17 @@ export default function ChatInput({
     e.preventDefault()
     const files = e.dataTransfer?.files
     if (!files) return
-    for (const file of files) {
-      if (file.type.startsWith('image/')) {
-        try {
-          const result = await uploadChatImage(taskId, file)
-          setAttachedImages(prev => [...prev, { name: file.name, path: result.path }])
-        } catch (err) {
-          console.error('Image upload failed:', err)
-        }
-      }
+    const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'))
+    if (imageFiles.length === 0) return
+    // Upload all images concurrently but preserve order via Promise.all
+    const results = await Promise.allSettled(
+      imageFiles.map(file => uploadChatImage(taskId, file).then(r => ({ name: file.name, path: r.path })))
+    )
+    const uploaded = results
+      .filter((r): r is PromiseFulfilledResult<{ name: string; path: string }> => r.status === 'fulfilled')
+      .map(r => r.value)
+    if (uploaded.length > 0) {
+      setAttachedImages(prev => [...prev, ...uploaded])
     }
   }, [taskId])
 

@@ -89,6 +89,8 @@ class TodoWorkflow:
         """Guard: previous todo (seq-1) must be done or skipped.
 
         First todo (seq=1) always passes.
+        If predecessor does not exist (e.g. deleted), the guard passes to
+        avoid permanently blocking execution.
         """
         if self.todo.seq <= 1:
             return True
@@ -99,7 +101,11 @@ class TodoWorkflow:
             )
         )
         prev = result.scalar()
-        return prev is not None and prev.status in (TodoStatus.DONE, TodoStatus.SKIPPED)
+        if prev is None:
+            # Predecessor was deleted — allow execution rather than blocking forever
+            logger.warning("Todo %s predecessor (seq=%d) not found, allowing execution", self.todo.id, self.todo.seq - 1)
+            return True
+        return prev.status in (TodoStatus.DONE, TodoStatus.SKIPPED)
 
     def _sync_status(self):
         """Sync todo.status to DB model whenever state changes."""

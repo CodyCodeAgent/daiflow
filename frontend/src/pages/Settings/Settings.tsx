@@ -95,7 +95,10 @@ export default function Settings() {
 
   const loadRunners = () => {
     setRunnersLoading(true)
-    listRunners().then(setRunners).catch(() => setRunners([])).finally(() => setRunnersLoading(false))
+    listRunners().then(setRunners).catch((err) => {
+      console.error('Failed to load runners:', err)
+      setRunners([])
+    }).finally(() => setRunnersLoading(false))
   }
 
   useEffect(() => {
@@ -107,7 +110,7 @@ export default function Settings() {
       if (data.tool_approval_mode && ['auto', 'high_risk', 'all'].includes(data.tool_approval_mode)) {
         setApprovalMode(data.tool_approval_mode as 'auto' | 'high_risk' | 'all')
       }
-    }).catch(() => {})
+    }).catch((err) => { console.error('Failed to load settings:', err) })
   }, [])
 
   const openAdd = () => {
