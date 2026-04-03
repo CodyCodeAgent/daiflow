@@ -66,7 +66,7 @@ export default function ProjectForm({
 
   useEffect(() => {
     listRunners().then(setRunners).catch(err => console.error('Failed to load runners:', err))
-    listSkills().then(setAllSkills).catch(() => {})
+    listSkills({ source_type: 'manual' }).then(setAllSkills).catch(() => {})
     loadLinkedSkills()
   }, [loadLinkedSkills])
 

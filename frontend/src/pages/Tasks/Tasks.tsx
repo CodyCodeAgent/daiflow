@@ -52,7 +52,7 @@ export default function Tasks() {
     listTasks(projectId).then(setTasks).catch(err => console.error('Failed to load tasks:', err))
     listProjects().then(setProjects).catch(err => console.error('Failed to load projects:', err))
     listRunners().then(setRunners).catch(err => console.error('Failed to load runners:', err))
-    listSkills().then(setAllSkills).catch(() => {})
+    listSkills({ source_type: 'manual' }).then(setAllSkills).catch(() => {})
   }, [projectId])
 
   // Load project skills when project is selected

@@ -156,12 +156,6 @@
   margin-bottom: 12px;
 }
 
-.skill-source-id {
-  font-size: 11px;
-  color: var(--t3);
-  font-family: var(--mono);
-}
-
 .skill-detail-content {
   font-size: 12px;
   font-family: var(--mono);
@@ -196,6 +190,12 @@
 
 .skill-form .field {
   margin-bottom: 10px;
+}
+
+.skill-form .actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .skill-content-input {

@@ -39,7 +39,7 @@ function SkillForm({ initial, onSave, onCancel, t }: {
       <div className="field">
         <label className="field-label">{t('skills.content')}</label>
         <textarea className="input skill-content-input" value={content} onChange={e => setContent(e.target.value)}
-          placeholder={t('skills.content_placeholder')} rows={10} />
+          placeholder={t('skills.content_placeholder')} rows={12} />
       </div>
       <div className="actions">
         <button className="btn btn-primary btn-sm" onClick={() => onSave({ name, description, content, source_type: 'manual' })}
@@ -119,6 +119,7 @@ export default function Skills() {
   }
 
   const handleDelete = async (id: string) => {
+    if (!confirm(t('skills.delete_confirm'))) return
     try {
       await deleteSkill(id)
       if (selected?.id === id) setSelected(null)
