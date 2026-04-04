@@ -1,4 +1,3 @@
-import asyncio
 import json
 import shutil
 
@@ -276,36 +275,5 @@ async def get_init_sessions(project_id: str, db: AsyncSession = Depends(get_db))
     """Get all init sessions grouped by layer with aggregate status."""
     return await get_init_layer_status(db, project_id)
 
-
-@router.get("/{project_id}/knowledge")
-async def get_project_knowledge(project_id: str, db: AsyncSession = Depends(get_db)):
-    """Get project knowledge — reads from Skill Center DB, with file fallback for legacy data."""
-    from daiflow.services import skill_service
-    await _get_project_or_404(db, project_id)
-
-    skills = await skill_service.get_project_skills(db, project_id)
-    files: list[dict] = []
-
-    if skills:
-        for s in skills:
-            files.append({"name": s.name, "type": "skill", "content": s.content})
-    else:
-        # Legacy file fallback
-        project_dir = PROJECTS_DIR / project_id
-        def _read_legacy():
-            result = []
-            project_md = project_dir / "project.md"
-            if project_md.exists():
-                result.append({"name": "project.md", "type": "index", "content": project_md.read_text(encoding="utf-8")})
-            skills_dir = project_dir / "skills"
-            if skills_dir.exists():
-                for sd in sorted(skills_dir.iterdir()):
-                    if sd.is_dir():
-                        sf = sd / "SKILL.md"
-                        result.append({"name": sd.name, "type": "skill", "content": sf.read_text(encoding="utf-8") if sf.exists() else ""})
-            return result
-        files = await asyncio.to_thread(_read_legacy)
-
-    return {"project_id": project_id, "files": files}
 
 

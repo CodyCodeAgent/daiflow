@@ -9,6 +9,9 @@ from daiflow.models import Project, Task
 from daiflow.schemas import SkillBrief, SkillCreate, SkillResponse, SkillUpdate
 from daiflow.services import skill_service
 
+# Use /api prefix (not /api/skills) because this router also serves
+# /api/projects/{id}/skills and /api/tasks/{id}/skills — consolidating
+# all skill-related routes in one file for cohesion.
 router = APIRouter(prefix="/api", tags=["skills"])
 
 

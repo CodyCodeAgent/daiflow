@@ -92,6 +92,8 @@ async def build_runner_from_config(
         return CodyRunner(client)
 
     elif runner_type == "claude_code":
+        if tools:
+            logger.warning("Custom tools are not supported for claude_code runner — tools will be ignored")
         if not rc:
             raise ConfigurationError("RunnerConfig required for claude_code runner")
         cfg = json.loads(rc.config) if rc.config else {}
@@ -109,6 +111,8 @@ async def build_runner_from_config(
         )
 
     elif runner_type == "cursor":
+        if tools:
+            logger.warning("Custom tools are not supported for cursor runner — tools will be ignored")
         if not rc:
             raise ConfigurationError("RunnerConfig required for cursor runner")
         cfg = json.loads(rc.config) if rc.config else {}

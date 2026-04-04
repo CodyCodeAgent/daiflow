@@ -209,6 +209,9 @@ def make_save_skill_tool(db_holder: list, project_id: str):
                 description=description.strip(),
                 content=content.strip(),
             ))
+            # NOTE: commit here is intentional — this tool is called by the AI agent,
+            # not by a router. Each tool invocation must be self-contained because
+            # the agent may call other tools after this one returns.
             await db_holder[0].commit()
             return f"Skill '{name.strip()}' saved successfully."
         except Exception as e:

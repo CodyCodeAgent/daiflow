@@ -377,10 +377,27 @@ class SkillCreate(BaseModel):
 
     @field_validator("name")
     @classmethod
-    def not_empty(cls, v: str) -> str:
-        if not v.strip():
+    def validate_name(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
             raise ValueError("Skill name cannot be empty")
-        return v.strip()
+        if len(v) > 200:
+            raise ValueError("Skill name too long (max 200 chars)")
+        return v
+
+    @field_validator("description")
+    @classmethod
+    def validate_description(cls, v: str) -> str:
+        if len(v) > 1000:
+            raise ValueError("Description too long (max 1000 chars)")
+        return v
+
+    @field_validator("content")
+    @classmethod
+    def validate_content(cls, v: str) -> str:
+        if len(v) > 1_000_000:
+            raise ValueError("Content too large (max 1MB)")
+        return v
 
 
 class SkillUpdate(BaseModel):
