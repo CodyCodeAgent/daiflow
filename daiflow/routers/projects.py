@@ -43,12 +43,7 @@ async def _check_no_active_tasks(db: AsyncSession, project_id: str):
         )
 
 
-async def _get_project_or_404(db: AsyncSession, project_id: str) -> Project:
-    """Look up a project by ID, raise 404 if not found."""
-    p = await db.get(Project, project_id)
-    if not p:
-        raise HTTPException(status_code=404, detail="Project not found")
-    return p
+from daiflow.routers import get_project_or_404 as _get_project_or_404
 
 
 def _project_to_dict(p: Project, repos: list | None = None) -> dict:

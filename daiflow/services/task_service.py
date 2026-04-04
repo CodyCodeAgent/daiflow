@@ -144,7 +144,7 @@ async def _do_fetch_code(db: AsyncSession, session_id: str, *, task_id: str, pro
 async def _do_sync_skills(db: AsyncSession, session_id: str, *, task_id: str, project_id: str):
     """Subtask: sync project skills to task directory (DB-backed with legacy fallback)."""
     from daiflow.session_runner import append_log
-    from daiflow.services.skill_sync import sync_skills_to_task
+    from daiflow.services.skill_service import sync_skills_to_task
 
     count = await sync_skills_to_task(db, project_id, task_id)
     from daiflow.config import utc_iso

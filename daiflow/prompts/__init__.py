@@ -184,9 +184,6 @@ PROJECT_SUMMARY_PROMPT = (
     "Use name='project-summary', description='Project knowledge base index and summary'."
 )
 
-# Keep old name as alias for backward compatibility in imports
-PROJECT_MD_PROMPT = PROJECT_SUMMARY_PROMPT
-
 # ── Spec / Plan / Todo prompts ──
 
 SPEC_PROMPT_TEMPLATE = (

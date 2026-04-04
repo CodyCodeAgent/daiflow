@@ -1,7 +1,7 @@
 /**
  * Skill Center API — types and functions for skill CRUD + associations.
  */
-import { request } from './request'
+import { request } from './index'
 
 // ── Types ──
 

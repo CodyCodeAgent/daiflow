@@ -42,12 +42,7 @@ def _task_to_dict(t: Task) -> dict:
     return TaskResponse.model_validate(t).model_dump()
 
 
-async def _get_task_or_404(db: AsyncSession, task_id: str) -> Task:
-    """Look up a task by ID, raise 404 if not found."""
-    task = await db.get(Task, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-    return task
+from daiflow.routers import get_task_or_404 as _get_task_or_404
 
 
 # ── CRUD ──

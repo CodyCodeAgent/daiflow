@@ -1,20 +1,43 @@
-"""Skill Center service — pure DB operations for skill management.
-
-All functions operate on the DB only. No file I/O, no path helpers, no commits.
-Callers (routers) are responsible for committing transactions.
-File sync (DB → task skill directory) lives in skill_sync.py.
-"""
+"""Skill Center service — DB operations, file sync, and tool factory."""
 
 import logging
+import re
+import shutil
 
 from sqlalchemy import select, union
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from daiflow.config import PROJECTS_DIR, TASKS_DIR, get_task_skills_dir
 from daiflow.exceptions import NotFoundError
-from daiflow.models import ProjectSkill, Skill, TaskSkill
+from daiflow.models import ProjectSkill, Skill, Task, TaskSkill
 from daiflow.schemas import SkillCreate
 
 logger = logging.getLogger(__name__)
+
+
+# ── Generic link helpers ──
+
+
+async def _ensure_link(db: AsyncSession, model, filters: dict, create_kwargs: dict) -> None:
+    """Ensure a link record exists. Create it if missing."""
+    q = select(model)
+    for col, val in filters.items():
+        q = q.where(getattr(model, col) == val)
+    result = await db.execute(q)
+    if not result.scalar_one_or_none():
+        db.add(model(**create_kwargs))
+        await db.flush()
+
+
+async def _remove_link(db: AsyncSession, model, filters: dict) -> None:
+    """Remove a link record if it exists."""
+    q = select(model)
+    for col, val in filters.items():
+        q = q.where(getattr(model, col) == val)
+    result = await db.execute(q)
+    link = result.scalar_one_or_none()
+    if link:
+        await db.delete(link)
 
 
 # ── Core CRUD ──
@@ -49,9 +72,10 @@ async def upsert_skill(db: AsyncSession, data: SkillCreate) -> Skill:
         db.add(skill)
         await db.flush()
 
-    # Auto-link to project
     if data.source_type == "project" and data.source_id != "0":
-        await _ensure_project_skill_link(db, data.source_id, skill.id)
+        await _ensure_link(db, ProjectSkill,
+            {"project_id": data.source_id, "skill_id": skill.id},
+            {"project_id": data.source_id, "skill_id": skill.id})
 
     return skill
 
@@ -71,10 +95,6 @@ async def list_skills(
     source_id: str | None = None,
     project_id: str | None = None,
 ) -> list[Skill]:
-    """List skills with optional filters.
-
-    If project_id is given, returns skills linked to that project via project_skills.
-    """
     if project_id:
         return await get_project_skills(db, project_id)
     q = select(Skill).order_by(Skill.updated_at.desc())
@@ -114,38 +134,20 @@ async def get_project_skills(db: AsyncSession, project_id: str) -> list[Skill]:
 
 
 async def link_skill_to_project(db: AsyncSession, project_id: str, skill_id: str) -> None:
-    await _ensure_project_skill_link(db, project_id, skill_id)
+    await _ensure_link(db, ProjectSkill,
+        {"project_id": project_id, "skill_id": skill_id},
+        {"project_id": project_id, "skill_id": skill_id})
 
 
 async def unlink_skill_from_project(db: AsyncSession, project_id: str, skill_id: str) -> None:
-    result = await db.execute(
-        select(ProjectSkill).where(
-            ProjectSkill.project_id == project_id,
-            ProjectSkill.skill_id == skill_id,
-        )
-    )
-    link = result.scalar_one_or_none()
-    if link:
-        await db.delete(link)
-
-
-async def _ensure_project_skill_link(db: AsyncSession, project_id: str, skill_id: str) -> None:
-    result = await db.execute(
-        select(ProjectSkill).where(
-            ProjectSkill.project_id == project_id,
-            ProjectSkill.skill_id == skill_id,
-        )
-    )
-    if not result.scalar_one_or_none():
-        db.add(ProjectSkill(project_id=project_id, skill_id=skill_id))
-        await db.flush()
+    await _remove_link(db, ProjectSkill, {"project_id": project_id, "skill_id": skill_id})
 
 
 # ── Task-Skill associations ──
 
 
 async def get_task_effective_skills(db: AsyncSession, task_id: str, project_id: str) -> list[Skill]:
-    """Return the full set of skills for a task: project skills + task extra skills (single query)."""
+    """Project skills + task extra skills in a single query."""
     project_skill_ids = select(ProjectSkill.skill_id).where(ProjectSkill.project_id == project_id)
     task_skill_ids = select(TaskSkill.skill_id).where(TaskSkill.task_id == task_id)
     combined = union(project_skill_ids, task_skill_ids).subquery()
@@ -166,26 +168,13 @@ async def get_task_extra_skills(db: AsyncSession, task_id: str) -> list[Skill]:
 
 
 async def add_task_skill(db: AsyncSession, task_id: str, skill_id: str) -> None:
-    result = await db.execute(
-        select(TaskSkill).where(
-            TaskSkill.task_id == task_id,
-            TaskSkill.skill_id == skill_id,
-        )
-    )
-    if not result.scalar_one_or_none():
-        db.add(TaskSkill(task_id=task_id, skill_id=skill_id))
+    await _ensure_link(db, TaskSkill,
+        {"task_id": task_id, "skill_id": skill_id},
+        {"task_id": task_id, "skill_id": skill_id})
 
 
 async def remove_task_skill(db: AsyncSession, task_id: str, skill_id: str) -> None:
-    result = await db.execute(
-        select(TaskSkill).where(
-            TaskSkill.task_id == task_id,
-            TaskSkill.skill_id == skill_id,
-        )
-    )
-    link = result.scalar_one_or_none()
-    if link:
-        await db.delete(link)
+    await _remove_link(db, TaskSkill, {"task_id": task_id, "skill_id": skill_id})
 
 
 # ── save_skill tool factory ──
@@ -238,3 +227,57 @@ async def get_project_skills_content(db: AsyncSession, project_id: str, *, max_s
             break
         parts.append(part)
     return "\n\n---\n\n".join(parts)
+
+
+# ── SKILL.md assembly (for task sync) ──
+
+_YAML_UNSAFE_RE = re.compile(r'[:\n\r#\[\]{}&*!|>\'"%@`]')
+
+
+def assemble_skill_md(skill: Skill) -> str:
+    """Assemble a Skill DB record into SKILL.md format with YAML frontmatter."""
+    name = skill.name
+    desc = skill.description
+    if _YAML_UNSAFE_RE.search(name):
+        name = f'"{name}"'
+    if _YAML_UNSAFE_RE.search(desc):
+        desc = f'"{desc}"'
+    return f"---\nname: {name}\ndescription: {desc}\nuser-invocable: false\n---\n\n{skill.content}"
+
+
+# ── Sync: DB → task skill directory ──
+
+
+async def sync_skills_to_task(db: AsyncSession, project_id: str, task_id: str) -> int:
+    """Pull skills from DB, assemble SKILL.md files, and write to task skill dir.
+
+    Also writes project.md to task root for backward compat.
+    Returns the number of skills written.
+    """
+    result = await db.execute(select(Task).where(Task.id == task_id))
+    task = result.scalar_one_or_none()
+    if not task:
+        raise NotFoundError(f"Task {task_id} not found")
+
+    skills = await get_task_effective_skills(db, task_id, project_id)
+    if not skills:
+        return 0
+
+    task_skills_dir = get_task_skills_dir(task_id)
+    if task_skills_dir.exists():
+        shutil.rmtree(task_skills_dir)
+    task_skills_dir.mkdir(parents=True, exist_ok=True)
+
+    for skill in skills:
+        skill_dir = task_skills_dir / skill.name
+        skill_dir.mkdir(parents=True, exist_ok=True)
+        (skill_dir / "SKILL.md").write_text(assemble_skill_md(skill), encoding="utf-8")
+
+    # Backward compat: write project.md to task root from 'project-summary' skill
+    project_summary = next((s for s in skills if s.name == "project-summary"), None)
+    if project_summary:
+        task_dir = TASKS_DIR / task_id
+        task_dir.mkdir(parents=True, exist_ok=True)
+        (task_dir / "project.md").write_text(project_summary.content, encoding="utf-8")
+
+    return len(skills)

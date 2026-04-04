@@ -317,7 +317,7 @@ class TestEffectiveSkills:
 
 class TestSkillSync:
     async def test_assemble_skill_md(self):
-        from daiflow.services.skill_sync import assemble_skill_md
+        from daiflow.services.skill_service import assemble_skill_md
 
         skill = Skill(name="test", description="A test skill", content="# Hello\nWorld")
         md = assemble_skill_md(skill)
@@ -327,22 +327,22 @@ class TestSkillSync:
         assert "# Hello\nWorld" in md
 
     async def test_assemble_quotes_unsafe_yaml(self):
-        from daiflow.services.skill_sync import assemble_skill_md
+        from daiflow.services.skill_service import assemble_skill_md
 
         skill = Skill(name="has:colon", description="line1\nline2", content="body")
         md = assemble_skill_md(skill)
         assert '"has:colon"' in md
         assert '"line1\nline2"' in md
 
-    async def test_parse_roundtrip(self):
-        from daiflow.services.skill_sync import assemble_skill_md, parse_skill_md
+    async def test_assemble_contains_all_parts(self):
+        from daiflow.services.skill_service import assemble_skill_md
 
-        skill = Skill(name="round-trip", description="desc", content="# Content\n\nParagraph.")
+        skill = Skill(name="full-test", description="desc", content="# Content\n\nParagraph.")
         md = assemble_skill_md(skill)
-        name, desc, body = parse_skill_md(md)
-        assert name == "round-trip"
-        assert desc == "desc"
-        assert "# Content" in body
+        assert "name: full-test" in md
+        assert "description: desc" in md
+        assert "# Content" in md
+        assert "user-invocable: false" in md
 
 
 # ── Service: make_save_skill_tool ──
