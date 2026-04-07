@@ -6,13 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 DaiFlow is a local AI-powered programming workbench that productizes the full development workflow (requirement → technical plan → task decomposition → coding → code review → merge request). It uses an in-process AI engine (Cody SDK) to understand project context and assist developers.
 
-**Current status:** Early implementation — backend skeleton (FastAPI + SQLAlchemy models + routers + services) and frontend scaffold (React + Vite with pages/hooks/components) are in place. Core business logic (SessionRunner, WSManager, Cody integration) is being built out.
+**Current status:** Core backend (FastAPI + SQLAlchemy + routers + services + state machines + runner abstraction) and frontend (React + Vite + WebSocket integration) are substantially implemented. Active development on runner backends, MCP server integration, and workflow refinements.
 
 ## Tech Stack
 
 - **Frontend:** React 19 + TypeScript, built with Vite 6, react-router-dom v7
 - **Backend:** Python 3.11+ with FastAPI (async), WebSocket for streaming
-- **AI Engine:** Cody SDK (`pip install cody-ai`, `from cody import AsyncCodyClient`) — in-process, no external service; see `docs/Cody_sdk.md` for full API
+- **AI Engine:** Pluggable runner backends — Cody SDK (default, `pip install cody-ai`), Claude Code CLI, or Cursor IDE; see `docs/Cody_sdk.md` for Cody API
 - **State Machines:** `transitions` library (AsyncMachine) for task/todo lifecycle enforcement
 - **Database:** SQLite via SQLAlchemy async ORM (aiosqlite driver), Alembic for migrations
 - **Local Storage:** `~/.daiflow/` directory for DB, sessions, projects, tasks (override with `DAIFLOW_HOME` env var)
@@ -83,8 +83,10 @@ Single source of truth: `VERSION` file (semver format, e.g. `0.5.0`).
 Frontend (React SPA, Vite dev on :3000, proxies /api → :8000)
     ↕  HTTP REST + WebSocket
 Backend (FastAPI)
-    ↕              ↕
-Cody SDK       SQLite DB
+    ↕                    ↕
+Runner Backend        SQLite DB
+(Cody / ClaudeCode
+ / Cursor)
 ```
 
 ### Backend Module Organization
@@ -101,16 +103,27 @@ daiflow/
 ├── ws_manager.py        # WebSocket channel pub/sub manager
 ├── agent_executor.py    # Unified run_agent() entry point for all AI tasks
 ├── session_ids.py       # Session ID construction helpers
-├── routers/             # FastAPI route handlers (7 modules)
-├── services/            # Business logic (9 modules: git, review, task, project, cody, chat, skill, repo_monitor, settings)
-├── agents/              # AgentConfig definitions (init, plan, review, todo_exec, todo_split)
+├── routers/             # FastAPI route handlers (7: projects, tasks, todos, sessions, jobs, skills, settings, ws)
+├── services/            # Business logic (11: git, review, task, project, cody, chat, skill, mcp, runner, repo_monitor, settings)
+├── agents/              # AgentConfig registry + definitions (init, plan, spec, review, todo_exec, todo_split)
+├── runners/             # Runner backends (base protocol, cody_runner, claude_code_runner, cursor_runner)
 ├── workflow/            # State machines (task_machine, todo_machine) + orchestrator + pipeline
 └── prompts/             # Centralized prompt templates for all AI tasks
 ```
 
 ### Agent Executor Pattern
 
-All AI tasks (plan, todo split, todo exec, review) use a unified flow: router → `agent_executor.run_agent(agent_type, entity_id)` → builds `AgentContext` → `SessionRunner` executes Cody. Each agent type is defined in `daiflow/agents/` as an `AgentConfig` with hooks for system prompt, on_before_done, and session ID construction.
+All AI tasks (plan, todo split, todo exec, review) use a unified flow: router → `agent_executor.run_agent(agent_type, entity_id)` → builds `AgentContext` → `SessionRunner` executes the runner. Each agent type is registered in `daiflow/agents/__init__.py` as an `AgentConfig` with hooks for system prompt, `on_before_done`, and session ID construction. `get_agent_config(agent_type)` dispatches via registry lookup.
+
+### Runner System
+
+`daiflow/runners/` provides a pluggable backend abstraction (`AbstractAgentRunner` protocol in `base.py`):
+
+- **CodyRunner** — wraps `AsyncCodyClient` (in-process Cody SDK)
+- **ClaudeCodeRunner** — wraps Claude Code CLI subprocess
+- **CursorRunner** — wraps Cursor IDE
+
+Runner resolution uses a three-tier lookup (task → project → global settings default) via `runner_service.py`. `cody_service.build_runner()` instantiates the resolved runner type with its credentials. `RunnerConfig` records are stored in the `runner_configs` DB table.
 
 ### Exception Handling
 
@@ -202,11 +215,15 @@ Output: `~/.daiflow/projects/{project_id}/skills/{knowledge_type}/SKILL.md`
 | WebSocket | `WS /api/ws` — subscribe to channels, real-time events, stage chat |
 | Review | `GET /api/tasks/{id}/diff`, `POST /api/tasks/{id}/submit-mr` |
 | Jobs | CRUD `/api/jobs`, `GET .../runs`, `POST .../trigger` |
+| Skills | CRUD `/api/skills`, `POST .../link`, `DELETE .../unlink` |
+| MCP Servers | CRUD `/api/mcp-servers`, `POST .../test` |
+| Runner Configs | CRUD `/api/settings/runners` |
 
-## Database Schema (8 tables)
+## Database Schema (13 tables)
 
 Defined in `daiflow/models.py`. All primary keys use UUID hex strings (`uuid.uuid4().hex`).
 
+- **runner_configs** — id, name, type (cody/claude_code/cursor), base_url, api_key, model, is_default
 - **projects** — id, name, description, skill_names (JSON array string)
 - **project_repos** — id, project_id (FK), git_url, local_path, repo_type (frontend/backend/custom), repo_type_label, description, master_hash
 - **tasks** — id, name, project_id (FK), description, branch, prd, tech_plan, status (int), mr_info (JSON string)
@@ -215,6 +232,10 @@ Defined in `daiflow/models.py`. All primary keys use UUID hex strings (`uuid.uui
 - **jobs** — id, project_id (FK), type, enabled, interval, config (JSON)
 - **job_runs** — id, job_id (FK), status (int), result (JSON), error, started_at, finished_at
 - **settings** — key/value pairs: `cody_model`, `cody_base_url`, `cody_api_key`, `theme`, `language`
+- **skills** — id, name, description, content (Markdown), is_builtin
+- **project_skills** — id, project_id (FK), skill_id (FK), symlink_path
+- **task_skills** — id, task_id (FK), skill_id (FK), symlink_path
+- **mcp_servers** — id, name (unique), command, args (JSON), env (JSON), enabled
 
 ## Status Enums (IntEnum in models.py)
 

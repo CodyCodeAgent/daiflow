@@ -20,9 +20,8 @@ interface ProjectFormProps {
   initialName?: string
   initialDescription?: string
   initialRepos?: RepoEntry[]
-  initialSkills?: string[]
   initialRunnerId?: string | null
-  onSave: (data: { name: string; description: string; repos: RepoEntry[]; skill_names: string[]; runner_id?: string | null }) => Promise<void>
+  onSave: (data: { name: string; description: string; repos: RepoEntry[]; runner_id?: string | null }) => Promise<void>
   onCancel: () => void
   saveLabel?: string
 }
@@ -32,7 +31,6 @@ export default function ProjectForm({
   initialName = '',
   initialDescription = '',
   initialRepos,
-  initialSkills = [],
   initialRunnerId = null,
   onSave,
   onCancel,
@@ -48,8 +46,6 @@ export default function ProjectForm({
       sub_path: '',
     }]
   )
-  const [skillInput, setSkillInput] = useState('')
-  const [skills, setSkills] = useState<string[]>(initialSkills)
   const [saving, setSaving] = useState(false)
   const [runners, setRunners] = useState<RunnerConfigData[]>([])
   const [runnerId, setRunnerId] = useState<string | null>(initialRunnerId)
@@ -85,26 +81,14 @@ export default function ProjectForm({
     setRepos(repos.map((r, i) => i === index ? { ...r, [field]: value } : r))
   }
 
-  const addSkill = () => {
-    if (skillInput.trim() && !skills.includes(skillInput.trim())) {
-      setSkills([...skills, skillInput.trim()])
-      setSkillInput('')
-    }
-  }
-
   const handleSave = async () => {
     if (!name.trim()) return
     setSaving(true)
-    // Flush any typed-but-not-confirmed skill before saving
-    const finalSkills = skillInput.trim() && !skills.includes(skillInput.trim())
-      ? [...skills, skillInput.trim()]
-      : skills
     try {
       await onSave({
         name: name.trim(),
         description: description.trim(),
         repos,
-        skill_names: finalSkills,
         runner_id: runnerId || null,
       })
     } catch (err: any) {
@@ -246,30 +230,7 @@ export default function ProjectForm({
             </div>
           )}
         </>
-      ) : (
-        <>
-          <div className="field">
-            <label className="field-label">{t('form.skill_names')}</label>
-            <input
-              className="input"
-              placeholder={t('form.skill_placeholder')}
-              value={skillInput}
-              onChange={e => setSkillInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addSkill() } }}
-            />
-          </div>
-          {skills.length > 0 && (
-            <div className="skill-pills">
-              {skills.map((s, i) => (
-                <span key={i} className="tag tag-purple">
-                  {s}
-                  <span style={{ cursor: 'pointer', marginLeft: 6 }} onClick={() => setSkills(skills.filter((_, j) => j !== i))}>x</span>
-                </span>
-              ))}
-            </div>
-          )}
-        </>
-      )}
+      ) : null}
 
       <div className="form-footer">
         <button className="btn btn-ghost" onClick={onCancel}>{t('form.cancel')}</button>

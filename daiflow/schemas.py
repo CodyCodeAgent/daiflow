@@ -60,16 +60,10 @@ class ProjectResponse(_ORMBase):
     id: str
     name: str
     description: str
-    skill_names: list[str] = []
     repos: list[RepoResponse] = []
     runner_id: str | None = None
     created_at: str | None = None
     updated_at: str | None = None
-
-    @field_validator("skill_names", mode="before")
-    @classmethod
-    def parse_skill_names(cls, v):
-        return _parse_json_str(v, [])
 
     @field_validator("created_at", "updated_at", mode="before")
     @classmethod
@@ -158,7 +152,6 @@ class ProjectCreate(BaseModel):
     name: str
     description: str = ""
     repos: list[RepoCreate] = []
-    skill_names: list[str] = []
     runner_id: str | None = None
 
 
@@ -166,7 +159,6 @@ class ProjectUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
     repos: list[RepoCreate] | None = None
-    skill_names: list[str] | None = None
     runner_id: str | None = None
 
 

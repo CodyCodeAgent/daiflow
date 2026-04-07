@@ -77,8 +77,6 @@ const en = {
   'form.sub_path_placeholder': 'e.g. src/modules/budget (empty = whole repo)',
   'form.add_repo': '+ Add Repo',
   'form.skill_config': 'Skill Config',
-  'form.skill_names': 'Skill Names',
-  'form.skill_placeholder': 'Enter skill name and press Enter',
   'form.linked_skills': 'Linked Skills',
   'form.skill_search_placeholder': 'Search skills to link...',
   'form.cancel': 'Cancel',

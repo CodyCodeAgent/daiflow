@@ -13,7 +13,7 @@ export default function EditProject() {
   const { t } = useLocale()
   const [loading, setLoading] = useState(true)
   const [initialData, setInitialData] = useState<{
-    name: string; description: string; repos: RepoEntry[]; skills: string[]; runnerId: string | null
+    name: string; description: string; repos: RepoEntry[]; runnerId: string | null
   } | null>(null)
 
   useEffect(() => {
@@ -23,7 +23,6 @@ export default function EditProject() {
         name: p.name || '',
         description: p.description || '',
         repos: p.repos || [],
-        skills: p.skill_names || [],
         runnerId: p.runner_id || null,
       })
     }).catch(() => {}).finally(() => setLoading(false))
@@ -31,7 +30,7 @@ export default function EditProject() {
 
   if (loading || !initialData) return <Loading />
 
-  const handleSave = async (data: { name: string; description: string; repos: any[]; skill_names: string[]; runner_id?: string | null }) => {
+  const handleSave = async (data: { name: string; description: string; repos: any[]; runner_id?: string | null }) => {
     if (!projectId) return
     await updateProject(projectId, data)
     navigate('/projects')
@@ -46,7 +45,6 @@ export default function EditProject() {
           initialName={initialData.name}
           initialDescription={initialData.description}
           initialRepos={initialData.repos}
-          initialSkills={initialData.skills}
           initialRunnerId={initialData.runnerId}
           onSave={handleSave}
           onCancel={() => navigate('/projects')}

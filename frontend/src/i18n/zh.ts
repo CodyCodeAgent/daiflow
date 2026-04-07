@@ -79,8 +79,6 @@ const zh: Record<TranslationKey, string> = {
   'form.sub_path_placeholder': '例如 src/modules/budget（留空 = 整个仓库）',
   'form.add_repo': '+ 添加仓库',
   'form.skill_config': 'Skill 配置',
-  'form.skill_names': 'Skill 名称',
-  'form.skill_placeholder': '输入 Skill 名称后回车',
   'form.linked_skills': '关联技能',
   'form.skill_search_placeholder': '搜索技能以关联...',
   'form.cancel': '取消',

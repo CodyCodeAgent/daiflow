@@ -70,7 +70,6 @@ class Project(Base):
     id = Column(String, primary_key=True, default=_uuid)
     name = Column(String, nullable=False)
     description = Column(Text, default="")
-    skill_names = Column(Text, default="[]")  # JSON array
     runner_id = Column(String, ForeignKey("runner_configs.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime, default=_now)
     updated_at = Column(DateTime, default=_now, onupdate=_now)

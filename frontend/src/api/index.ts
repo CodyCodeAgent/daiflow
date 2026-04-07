@@ -86,7 +86,6 @@ export interface ProjectData {
   id: string
   name: string
   description: string
-  skill_names: string[]
   repos?: RepoData[]
   runner_id: string | null
   created_at: string | null
@@ -127,7 +126,6 @@ export function joinDiffs(data: DiffData): string {
 interface CreateProjectData {
   name: string
   description?: string
-  skill_names?: string[]
   repos?: {
     git_url: string
     local_path?: string

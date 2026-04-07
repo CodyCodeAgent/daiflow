@@ -8,7 +8,7 @@ export default function CreateProject() {
   const navigate = useNavigate()
   const { t } = useLocale()
 
-  const handleSave = async (data: { name: string; description: string; repos: any[]; skill_names: string[]; runner_id?: string | null }) => {
+  const handleSave = async (data: { name: string; description: string; repos: any[]; runner_id?: string | null }) => {
     const project = await createProject(data)
     await initProject(project.id)
     navigate(`/projects/${project.id}/init`)

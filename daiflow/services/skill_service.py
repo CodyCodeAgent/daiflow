@@ -4,7 +4,7 @@ import logging
 import re
 import shutil
 
-from sqlalchemy import select, union
+from sqlalchemy import delete, select, union
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from daiflow.config import PROJECTS_DIR, TASKS_DIR, get_task_skills_dir
@@ -118,6 +118,13 @@ async def update_skill(db: AsyncSession, skill_id: str, *, description: str | No
 async def delete_skill(db: AsyncSession, skill_id: str) -> None:
     skill = await get_skill(db, skill_id)
     await db.delete(skill)
+
+
+async def delete_project_skills(db: AsyncSession, project_id: str) -> None:
+    """Delete all skills generated for a project (source_type='project')."""
+    await db.execute(
+        delete(Skill).where(Skill.source_type == "project", Skill.source_id == project_id)
+    )
 
 
 # ── Project-Skill associations ──

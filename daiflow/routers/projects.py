@@ -1,4 +1,3 @@
-import json
 import shutil
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
@@ -13,6 +12,7 @@ from daiflow.schemas import ProjectCreate, ProjectResponse, ProjectUpdate
 from daiflow.services.project_service import (
     get_init_layer_status, prepare_init_sessions, run_init, run_init_retry,
 )
+from daiflow.services.skill_service import delete_project_skills
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
 
@@ -50,8 +50,7 @@ def _project_to_dict(p: Project, repos: list | None = None) -> dict:
     """Serialize a Project + repos to dict. Repos must be passed explicitly to avoid lazy loading."""
     return ProjectResponse.model_validate({
         "id": p.id, "name": p.name, "description": p.description,
-        "skill_names": p.skill_names, "repos": repos or [],
-        "runner_id": p.runner_id,
+        "repos": repos or [], "runner_id": p.runner_id,
         "created_at": p.created_at, "updated_at": p.updated_at,
     }).model_dump()
 
@@ -80,7 +79,6 @@ async def create_project(data: ProjectCreate, db: AsyncSession = Depends(get_db)
     project = Project(
         name=data.name,
         description=data.description,
-        skill_names=json.dumps(data.skill_names),
         runner_id=data.runner_id,
     )
     db.add(project)
@@ -116,8 +114,6 @@ async def update_project(
         project.name = data.name
     if data.description is not None:
         project.description = data.description
-    if data.skill_names is not None:
-        project.skill_names = json.dumps(data.skill_names)
     if data.runner_id is not None:
         project.runner_id = data.runner_id
 
@@ -173,6 +169,7 @@ async def update_project(
 async def delete_project(project_id: str, db: AsyncSession = Depends(get_db)):
     project = await _get_project_or_404(db, project_id)
 
+    await delete_project_skills(db, project_id)
     await db.delete(project)
     await db.commit()
 
