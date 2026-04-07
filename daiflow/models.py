@@ -77,6 +77,7 @@ class Project(Base):
 
     repos = relationship("ProjectRepo", back_populates="project", cascade="all, delete-orphan")
     tasks = relationship("Task", back_populates="project", cascade="all, delete-orphan")
+    project_skills = relationship("ProjectSkill", cascade="all, delete-orphan")
 
 
 class ProjectRepo(Base):
@@ -118,6 +119,7 @@ class Task(Base):
 
     project = relationship("Project", back_populates="tasks")
     todos = relationship("Todo", back_populates="task", cascade="all, delete-orphan")
+    task_skills = relationship("TaskSkill", cascade="all, delete-orphan")
 
 
 class Todo(Base):
@@ -199,6 +201,61 @@ class Setting(Base):
     key = Column(String, primary_key=True)
     value = Column(Text, default="")
     updated_at = Column(DateTime, default=_now, onupdate=_now)
+
+
+class Skill(Base):
+    """Centralized skill pool entry."""
+    __tablename__ = "skills"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    source_type = Column(String, nullable=False)   # "project" | "manual" | "external"
+    source_id = Column(String, nullable=False)      # project_id, or "0" for manual/external
+    name = Column(String, nullable=False)
+    description = Column(Text, default="")
+    content = Column(Text, default="")              # Markdown body (no YAML frontmatter)
+    created_at = Column(DateTime, default=_now)
+    updated_at = Column(DateTime, default=_now, onupdate=_now)
+
+    project_links = relationship("ProjectSkill", back_populates="skill", cascade="all, delete-orphan")
+    task_links = relationship("TaskSkill", back_populates="skill", cascade="all, delete-orphan")
+
+    __table_args__ = (
+        Index("uq_skill_source_name", "source_type", "source_id", "name", unique=True),
+    )
+
+
+class ProjectSkill(Base):
+    """Association: which skills are linked to which project."""
+    __tablename__ = "project_skills"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    project_id = Column(String, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False)
+    skill_id = Column(String, ForeignKey("skills.id", ondelete="CASCADE"), nullable=False)
+    created_at = Column(DateTime, default=_now)
+
+    project = relationship("Project", back_populates="project_skills")
+    skill = relationship("Skill", back_populates="project_links")
+
+    __table_args__ = (
+        Index("uq_project_skill", "project_id", "skill_id", unique=True),
+    )
+
+
+class TaskSkill(Base):
+    """Extra skills selected for a specific task (beyond project defaults)."""
+    __tablename__ = "task_skills"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    task_id = Column(String, ForeignKey("tasks.id", ondelete="CASCADE"), nullable=False)
+    skill_id = Column(String, ForeignKey("skills.id", ondelete="CASCADE"), nullable=False)
+    created_at = Column(DateTime, default=_now)
+
+    task = relationship("Task", back_populates="task_skills")
+    skill = relationship("Skill", back_populates="task_links")
+
+    __table_args__ = (
+        Index("uq_task_skill", "task_id", "skill_id", unique=True),
+    )
 
 
 class McpServer(Base):

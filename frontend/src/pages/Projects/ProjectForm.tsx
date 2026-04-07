@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useLocale } from '../../hooks/useLocale'
 import { useToast } from '../../components/Toast/ToastContext'
-import { listRunners } from '../../api'
-import type { RunnerConfigData } from '../../api'
+import { listRunners, listSkills, getProjectSkills, linkProjectSkill, unlinkProjectSkill } from '../../api'
+import type { RunnerConfigData, SkillBriefData } from '../../api'
 import './CreateProject.css'
 
 export interface RepoEntry {
@@ -16,6 +16,7 @@ export interface RepoEntry {
 }
 
 interface ProjectFormProps {
+  projectId?: string
   initialName?: string
   initialDescription?: string
   initialRepos?: RepoEntry[]
@@ -27,6 +28,7 @@ interface ProjectFormProps {
 }
 
 export default function ProjectForm({
+  projectId,
   initialName = '',
   initialDescription = '',
   initialRepos,
@@ -52,9 +54,21 @@ export default function ProjectForm({
   const [runners, setRunners] = useState<RunnerConfigData[]>([])
   const [runnerId, setRunnerId] = useState<string | null>(initialRunnerId)
 
+  // Skill picker state (edit mode only)
+  const [linkedSkills, setLinkedSkills] = useState<SkillBriefData[]>([])
+  const [allSkills, setAllSkills] = useState<SkillBriefData[]>([])
+  const [skillSearch, setSkillSearch] = useState('')
+
+  const loadLinkedSkills = useCallback(() => {
+    if (!projectId) return
+    getProjectSkills(projectId).then(setLinkedSkills).catch(() => {})
+  }, [projectId])
+
   useEffect(() => {
     listRunners().then(setRunners).catch(err => console.error('Failed to load runners:', err))
-  }, [])
+    listSkills({ source_type: 'manual' }).then(setAllSkills).catch(() => {})
+    loadLinkedSkills()
+  }, [loadLinkedSkills])
 
   const addRepo = () => {
     setRepos([...repos, {
@@ -181,25 +195,80 @@ export default function ProjectForm({
         </div>
       )}
 
-      <div className="field">
-        <label className="field-label">{t('form.skill_names')}</label>
-        <input
-          className="input"
-          placeholder={t('form.skill_placeholder')}
-          value={skillInput}
-          onChange={e => setSkillInput(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addSkill() } }}
-        />
-      </div>
-      {skills.length > 0 && (
-        <div className="skill-pills">
-          {skills.map((s, i) => (
-            <span key={i} className="tag tag-purple">
-              {s}
-              <span style={{ cursor: 'pointer', marginLeft: 6 }} onClick={() => setSkills(skills.filter((_, j) => j !== i))}>x</span>
-            </span>
-          ))}
-        </div>
+      {/* Skill picker (edit mode) or free-text tags (create mode) */}
+      {projectId ? (
+        <>
+          <div className="field">
+            <label className="field-label">{t('form.linked_skills')}</label>
+          </div>
+          {linkedSkills.length > 0 && (
+            <div className="skill-pills">
+              {linkedSkills.map(s => (
+                <span key={s.id} className="tag tag-purple">
+                  {s.name}
+                  <span style={{ cursor: 'pointer', marginLeft: 6 }} onClick={async () => {
+                    try {
+                      await unlinkProjectSkill(projectId, s.id)
+                      loadLinkedSkills()
+                    } catch (err: any) { toast.error(err.message) }
+                  }}>x</span>
+                </span>
+              ))}
+            </div>
+          )}
+          {linkedSkills.length === 0 && <div style={{ fontSize: 12, color: 'var(--t3)', marginBottom: 8 }}>{t('skills.empty')}</div>}
+          <div className="field">
+            <input
+              className="input"
+              placeholder={t('form.skill_search_placeholder')}
+              value={skillSearch}
+              onChange={e => setSkillSearch(e.target.value)}
+            />
+          </div>
+          {skillSearch.trim() && (
+            <div className="skill-search-results">
+              {allSkills
+                .filter(s => !linkedSkills.some(ls => ls.id === s.id))
+                .filter(s => s.name.toLowerCase().includes(skillSearch.toLowerCase()) || s.description.toLowerCase().includes(skillSearch.toLowerCase()))
+                .slice(0, 8)
+                .map(s => (
+                  <div key={s.id} className="skill-search-item" onClick={async () => {
+                    try {
+                      await linkProjectSkill(projectId, s.id)
+                      loadLinkedSkills()
+                      setSkillSearch('')
+                    } catch (err: any) { toast.error(err.message) }
+                  }}>
+                    <strong>{s.name}</strong>
+                    {s.description && <span className="skill-search-desc">{s.description}</span>}
+                  </div>
+                ))}
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <div className="field">
+            <label className="field-label">{t('form.skill_names')}</label>
+            <input
+              className="input"
+              placeholder={t('form.skill_placeholder')}
+              value={skillInput}
+              onChange={e => setSkillInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addSkill() } }}
+            />
+          </div>
+          {skills.length > 0 && (
+            <div className="skill-pills">
+              {skills.map((s, i) => (
+                <span key={i} className="tag tag-purple">
+                  {s}
+                  <span style={{ cursor: 'pointer', marginLeft: 6 }} onClick={() => setSkills(skills.filter((_, j) => j !== i))}>x</span>
+                </span>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       <div className="form-footer">

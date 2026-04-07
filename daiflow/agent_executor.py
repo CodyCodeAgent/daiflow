@@ -13,7 +13,7 @@ from daiflow.agents import AgentConfig, AgentContext, get_agent_config
 from daiflow.models import Session, SessionStatus, Task, Todo
 from daiflow.services.cody_service import build_task_runner
 from daiflow.services.settings_service import get_language_setting
-from daiflow.services.skill_service import get_task_dir
+from daiflow.config import get_task_dir
 from daiflow.services.task_service import get_task_context
 from daiflow.session_runner import SessionRunner
 

@@ -10,7 +10,7 @@ from daiflow.config import DAIFLOW_HOME, PROJECTS_DIR, TASKS_DIR, safe_filename,
 from daiflow.models import Project, RunnerConfig, Setting, Task, Todo, TodoStatus
 from daiflow.services.git_service import validate_branch_name
 from daiflow.services.runner_service import mask_runner_config, resolve_runner_config
-from daiflow.services.skill_service import (
+from daiflow.config import (
     get_project_dir,
     get_project_skills_dir,
     get_task_dir,

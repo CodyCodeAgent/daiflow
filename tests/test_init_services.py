@@ -519,10 +519,10 @@ class TestConstitutionPromptTemplate:
         assert CONSTITUTION_PROMPT_TEMPLATE
         assert len(CONSTITUTION_PROMPT_TEMPLATE) > 50
 
-    def test_constitution_prompt_mentions_output_path(self):
-        """CONSTITUTION_PROMPT_TEMPLATE must have {output_path} placeholder."""
+    def test_constitution_prompt_mentions_save_skill(self):
+        """CONSTITUTION_PROMPT_TEMPLATE must reference save_skill tool."""
         from daiflow.prompts import CONSTITUTION_PROMPT_TEMPLATE
-        assert "{output_path}" in CONSTITUTION_PROMPT_TEMPLATE
+        assert "save_skill" in CONSTITUTION_PROMPT_TEMPLATE
 
     def test_constitution_prompt_mentions_constitution(self):
         """Prompt should reference constitution.md as the output file."""

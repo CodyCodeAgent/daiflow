@@ -1,9 +1,8 @@
-const BASE = '/api'
+export const BASE = '/api'
 
-/** Default request timeout in milliseconds. */
 const REQUEST_TIMEOUT_MS = 30_000
 
-async function request<T = unknown>(path: string, options?: RequestInit): Promise<T> {
+export async function request<T = unknown>(path: string, options?: RequestInit): Promise<T> {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
 
@@ -33,6 +32,8 @@ async function request<T = unknown>(path: string, options?: RequestInit): Promis
     clearTimeout(timeoutId)
   }
 }
+
+export * from './skills'
 
 // ── Types ──
 
@@ -212,8 +213,6 @@ export const getInitSessions = (id: string) =>
   request<InitLayerData[]>(`/projects/${id}/init/sessions`)
 export const retryProjectInit = (id: string) =>
   request<{ ok: boolean }>(`/projects/${id}/init/retry`, { method: 'POST' })
-export const getProjectKnowledge = (id: string) =>
-  request<{ project_id: string; files: { name: string; type: string; content: string }[] }>(`/projects/${id}/knowledge`)
 
 export interface InitSessionData {
   session_id: string
@@ -387,4 +386,5 @@ export interface ArtifactResponse {
 
 export const getTaskArtifact = (taskId: string, name: ArtifactName): Promise<ArtifactResponse> =>
   request<ArtifactResponse>(`/tasks/${taskId}/artifacts/${name}`)
+
 

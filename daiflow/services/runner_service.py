@@ -69,6 +69,7 @@ async def build_runner_from_config(
     workdir: str,
     allowed_roots: list[str],
     skill_dir: str | None = None,
+    tools: list | None = None,
 ) -> AbstractAgentRunner:
     """Instantiate a runner from a RunnerConfig.
 
@@ -86,11 +87,13 @@ async def build_runner_from_config(
 
     if runner_type == "cody":
         cfg = json.loads(rc.config) if rc and rc.config else {}
-        client = await _build_cody_client_from_cfg(db, cfg, workdir, allowed_roots, skill_dir)
+        client = await _build_cody_client_from_cfg(db, cfg, workdir, allowed_roots, skill_dir, tools=tools)
         from daiflow.runners.cody_runner import CodyRunner
         return CodyRunner(client)
 
     elif runner_type == "claude_code":
+        if tools:
+            logger.warning("Custom tools are not supported for claude_code runner — tools will be ignored")
         if not rc:
             raise ConfigurationError("RunnerConfig required for claude_code runner")
         cfg = json.loads(rc.config) if rc.config else {}
@@ -108,6 +111,8 @@ async def build_runner_from_config(
         )
 
     elif runner_type == "cursor":
+        if tools:
+            logger.warning("Custom tools are not supported for cursor runner — tools will be ignored")
         if not rc:
             raise ConfigurationError("RunnerConfig required for cursor runner")
         cfg = json.loads(rc.config) if rc.config else {}
@@ -137,6 +142,7 @@ async def _build_cody_client_from_cfg(
     workdir: str,
     allowed_roots: list[str],
     skill_dir: str | None,
+    tools: list | None = None,
 ):
     """Build an AsyncCodyClient from either a RunnerConfig's config dict or legacy DB settings."""
     from daiflow.config import CODY_DB_PATH
@@ -191,6 +197,11 @@ async def _build_cody_client_from_cfg(
             builder = builder.mcp_http_server(name, url=url, headers=headers)
         if servers and hasattr(builder, "auto_start_mcp"):
             builder = builder.auto_start_mcp(True)
+
+    # Register custom tools
+    if tools and hasattr(builder, "tool"):
+        for tool_fn in tools:
+            builder = builder.tool(tool_fn)
 
     return builder.build()
 

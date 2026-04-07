@@ -42,12 +42,7 @@ def _task_to_dict(t: Task) -> dict:
     return TaskResponse.model_validate(t).model_dump()
 
 
-async def _get_task_or_404(db: AsyncSession, task_id: str) -> Task:
-    """Look up a task by ID, raise 404 if not found."""
-    task = await db.get(Task, task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-    return task
+from daiflow.routers import get_task_or_404 as _get_task_or_404
 
 
 # ── CRUD ──
@@ -562,15 +557,25 @@ async def get_task_artifact(
 
     task_dir = TASKS_DIR / task_id
 
-    # Special case: constitution is stored at project level
+    # Special case: constitution — look up from Skill Center DB first, then file fallback
     if name == "constitution":
+        from daiflow.services import skill_service
+        from sqlalchemy import select as sa_select
+        from daiflow.models import Skill
+        result = await db.execute(
+            sa_select(Skill).where(
+                Skill.source_type == "project",
+                Skill.source_id == task.project_id,
+                Skill.name == "constitution",
+            )
+        )
+        skill = result.scalar_one_or_none()
+        if skill:
+            return {"content": skill.content, "exists": True}
+        # File fallback for legacy projects
         from daiflow.config import PROJECTS_DIR
         project_dir = PROJECTS_DIR / task.project_id
-        candidates = [
-            project_dir / "constitution.md",
-            task_dir / "constitution.md",
-        ]
-        for path in candidates:
+        for path in [project_dir / "constitution.md", task_dir / "constitution.md"]:
             if path.exists():
                 return {"content": path.read_text(encoding="utf-8"), "exists": True}
         return {"content": "", "exists": False}

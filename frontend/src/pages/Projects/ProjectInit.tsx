@@ -201,6 +201,14 @@ export default function ProjectInit() {
                   {regenerating ? t('init.regenerating') : t('init.regenerate')}
                 </button>
               )}
+              {done && !hasFailed && (
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => navigate(`/skills?project_id=${projectId}`)}
+                >
+                  {t('init.view_skills')}
+                </button>
+              )}
               <div style={{ flex: 1 }} />
               <button className="btn btn-ghost" onClick={() => navigate('/projects')}>
                 {t('init.return_projects')}

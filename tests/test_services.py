@@ -183,36 +183,9 @@ class TestStartCoding:
 
 
 class TestSkillService:
-    def test_sync_skills_no_source(self):
-        """When project skills don't exist, create empty directory."""
-        from daiflow.services.skill_service import get_task_dir, sync_skills_to_task
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            import os
-            old = os.environ.get("DAIFLOW_HOME")
-            os.environ["DAIFLOW_HOME"] = tmpdir
-
-            import importlib
-            import daiflow.config as cfg
-            importlib.reload(cfg)
-            cfg.init_daiflow_dir()
-
-            import daiflow.services.skill_service as ss
-            importlib.reload(ss)
-
-            ss.sync_skills_to_task("proj_1", "task_1")
-
-            task_skills = ss.get_task_skills_dir("task_1")
-            assert task_skills.exists()
-
-            if old:
-                os.environ["DAIFLOW_HOME"] = old
-            importlib.reload(cfg)
-            importlib.reload(ss)
-
     def test_get_task_dir_creates(self):
         """get_task_dir should create the directory."""
-        from daiflow.services.skill_service import get_task_dir
+        from daiflow.config import get_task_dir
 
         with tempfile.TemporaryDirectory() as tmpdir:
             import os
@@ -224,13 +197,11 @@ class TestSkillService:
             importlib.reload(cfg)
             cfg.init_daiflow_dir()
 
-            import daiflow.services.skill_service as ss
-            importlib.reload(ss)
+            importlib.reload(cfg)
 
-            d = ss.get_task_dir("task_42")
+            d = cfg.get_task_dir("task_42")
             assert d.exists()
 
             if old:
                 os.environ["DAIFLOW_HOME"] = old
             importlib.reload(cfg)
-            importlib.reload(ss)

@@ -17,8 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from daiflow.database import get_background_db
 from daiflow.models import ProjectRepo, Session, SessionStatus
 from daiflow.services.settings_service import get_language_setting
-from daiflow.services.skill_service import get_project_dir
-from daiflow.config import utc_iso
+from daiflow.config import get_project_dir, utc_iso
 from daiflow.session_runner import append_log
 from daiflow.ws_manager import WSManager, ws_manager as _default_ws_manager
 

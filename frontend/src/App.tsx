@@ -6,7 +6,6 @@ import Projects from './pages/Projects/Projects'
 import CreateProject from './pages/Projects/CreateProject'
 import EditProject from './pages/Projects/EditProject'
 import ProjectInit from './pages/Projects/ProjectInit'
-import ProjectKnowledge from './pages/Projects/ProjectKnowledge'
 import Tasks from './pages/Tasks/Tasks'
 import InitStage from './pages/DevFlow/InitStage/InitStage'
 import PlanStage from './pages/DevFlow/PlanStage/PlanStage'
@@ -15,6 +14,7 @@ import CodingStage from './pages/DevFlow/CodingStage/CodingStage'
 import ReviewStage from './pages/DevFlow/ReviewStage/ReviewStage'
 import Debug from './pages/Debug/Debug'
 import McpServers from './pages/McpServers/McpServers'
+import Skills from './pages/Skills/Skills'
 import DevFlowGuard from './components/DevFlowGuard/DevFlowGuard'
 import StageErrorBoundary from './components/StageErrorBoundary/StageErrorBoundary'
 import { checkSettings } from './api'
@@ -84,13 +84,13 @@ export default function App() {
             <Route path="/projects/new" element={<SettingsGuard><CreateProject /></SettingsGuard>} />
             <Route path="/projects/:projectId/edit" element={<SettingsGuard><EditProject /></SettingsGuard>} />
             <Route path="/projects/:projectId/init" element={<SettingsGuard><ProjectInit /></SettingsGuard>} />
-            <Route path="/projects/:projectId/knowledge" element={<SettingsGuard><ProjectKnowledge /></SettingsGuard>} />
             <Route path="/tasks" element={<SettingsGuard><Tasks /></SettingsGuard>} />
             <Route path="/devflow/:taskId/init" element={<SettingsGuard><StageErrorBoundary><DevFlowGuard stagePath="init"><InitStage /></DevFlowGuard></StageErrorBoundary></SettingsGuard>} />
             <Route path="/devflow/:taskId/plan" element={<SettingsGuard><StageErrorBoundary><DevFlowGuard stagePath="plan"><PlanStage /></DevFlowGuard></StageErrorBoundary></SettingsGuard>} />
             <Route path="/devflow/:taskId/todo" element={<SettingsGuard><StageErrorBoundary><DevFlowGuard stagePath="todo"><TodoStage /></DevFlowGuard></StageErrorBoundary></SettingsGuard>} />
             <Route path="/devflow/:taskId/coding" element={<SettingsGuard><StageErrorBoundary><DevFlowGuard stagePath="coding"><CodingStage /></DevFlowGuard></StageErrorBoundary></SettingsGuard>} />
             <Route path="/devflow/:taskId/review" element={<SettingsGuard><StageErrorBoundary><DevFlowGuard stagePath="review"><ReviewStage /></DevFlowGuard></StageErrorBoundary></SettingsGuard>} />
+            <Route path="/skills" element={<SettingsGuard><Skills /></SettingsGuard>} />
             <Route path="/mcp" element={<SettingsGuard><McpServers /></SettingsGuard>} />
             <Route path="/debug" element={<SettingsGuard><Debug /></SettingsGuard>} />
             <Route path="/" element={<Navigate to="/projects" replace />} />

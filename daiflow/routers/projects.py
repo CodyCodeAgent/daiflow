@@ -1,4 +1,3 @@
-import asyncio
 import json
 import shutil
 
@@ -44,12 +43,7 @@ async def _check_no_active_tasks(db: AsyncSession, project_id: str):
         )
 
 
-async def _get_project_or_404(db: AsyncSession, project_id: str) -> Project:
-    """Look up a project by ID, raise 404 if not found."""
-    p = await db.get(Project, project_id)
-    if not p:
-        raise HTTPException(status_code=404, detail="Project not found")
-    return p
+from daiflow.routers import get_project_or_404 as _get_project_or_404
 
 
 def _project_to_dict(p: Project, repos: list | None = None) -> dict:
@@ -276,40 +270,5 @@ async def get_init_sessions(project_id: str, db: AsyncSession = Depends(get_db))
     """Get all init sessions grouped by layer with aggregate status."""
     return await get_init_layer_status(db, project_id)
 
-
-@router.get("/{project_id}/knowledge")
-async def get_project_knowledge(project_id: str, db: AsyncSession = Depends(get_db)):
-    """Get project knowledge files (project.md + skills)."""
-    project = await _get_project_or_404(db, project_id)
-
-    project_dir = PROJECTS_DIR / project_id
-    files: list[dict] = []
-
-    def _read_knowledge():
-        result = []
-        # project.md
-        project_md = project_dir / "project.md"
-        if project_md.exists():
-            result.append({
-                "name": "project.md",
-                "type": "index",
-                "content": project_md.read_text(encoding="utf-8"),
-            })
-
-        # skills
-        skills_dir = project_dir / "skills"
-        if skills_dir.exists():
-            for skill_dir in sorted(skills_dir.iterdir()):
-                if skill_dir.is_dir():
-                    skill_file = skill_dir / "SKILL.md"
-                    result.append({
-                        "name": skill_dir.name,
-                        "type": "skill",
-                        "content": skill_file.read_text(encoding="utf-8") if skill_file.exists() else "",
-                    })
-        return result
-
-    files = await asyncio.to_thread(_read_knowledge)
-    return {"project_id": project_id, "files": files}
 
 

@@ -9,7 +9,7 @@ from daiflow.models import Task
 from daiflow.prompts import COMMIT_MESSAGE_PROMPT_TEMPLATE
 from daiflow.services.cody_service import build_runner
 from daiflow.services.git_service import commit, get_diff, push
-from daiflow.services.skill_service import get_task_dir
+from daiflow.config import get_task_dir
 from daiflow.services.task_service import fetch_project_repos, get_task_context, resolve_repo_path
 
 logger = logging.getLogger(__name__)

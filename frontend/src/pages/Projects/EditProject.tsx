@@ -42,6 +42,7 @@ export default function EditProject() {
       <Topbar title={t('edit_project.title')} backTo="/projects" backLabel={t('edit_project.back')} />
       <div className="content">
         <ProjectForm
+          projectId={projectId}
           initialName={initialData.name}
           initialDescription={initialData.description}
           initialRepos={initialData.repos}

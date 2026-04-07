@@ -16,12 +16,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/todos", tags=["todos"])
 
 
-async def _get_todo_or_404(db: AsyncSession, todo_id: str) -> Todo:
-    """Look up a todo by ID, raise 404 if not found."""
-    todo = await db.get(Todo, todo_id)
-    if not todo:
-        raise HTTPException(status_code=404, detail="Todo not found")
-    return todo
+from daiflow.routers import get_todo_or_404 as _get_todo_or_404
 
 
 @router.post("/{todo_id}/execute")

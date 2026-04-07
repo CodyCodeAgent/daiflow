@@ -363,3 +363,75 @@ class RunnerConfigResponse(_ORMBase):
 
 class DefaultRunnerUpdate(BaseModel):
     runner_id: str
+
+
+# ── Skill Center ──
+
+
+class SkillCreate(BaseModel):
+    source_type: Literal["project", "manual", "external"] = "manual"
+    source_id: str = "0"
+    name: str
+    description: str = ""
+    content: str = ""
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("Skill name cannot be empty")
+        if len(v) > 200:
+            raise ValueError("Skill name too long (max 200 chars)")
+        return v
+
+    @field_validator("description")
+    @classmethod
+    def validate_description(cls, v: str) -> str:
+        if len(v) > 1000:
+            raise ValueError("Description too long (max 1000 chars)")
+        return v
+
+    @field_validator("content")
+    @classmethod
+    def validate_content(cls, v: str) -> str:
+        if len(v) > 1_000_000:
+            raise ValueError("Content too large (max 1MB)")
+        return v
+
+
+class SkillUpdate(BaseModel):
+    description: str | None = None
+    content: str | None = None
+
+
+class SkillResponse(_ORMBase):
+    id: str
+    source_type: str
+    source_id: str
+    name: str
+    description: str
+    content: str
+    created_at: str | None = None
+    updated_at: str | None = None
+
+    @field_validator("created_at", "updated_at", mode="before")
+    @classmethod
+    def serialize_datetime(cls, v):
+        return _serialize_dt(v)
+
+
+class SkillBrief(_ORMBase):
+    """Lightweight response without content, for list views."""
+    id: str
+    source_type: str
+    source_id: str
+    name: str
+    description: str
+    created_at: str | None = None
+    updated_at: str | None = None
+
+    @field_validator("created_at", "updated_at", mode="before")
+    @classmethod
+    def serialize_datetime(cls, v):
+        return _serialize_dt(v)

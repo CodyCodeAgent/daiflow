@@ -11,6 +11,28 @@ TASKS_DIR = DAIFLOW_HOME / "tasks"
 
 DATABASE_URL = f"sqlite+aiosqlite:///{DB_PATH}"
 
+
+# ── Path helpers ──
+
+def get_project_dir(project_id: str) -> Path:
+    d = PROJECTS_DIR / project_id
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def get_project_skills_dir(project_id: str) -> Path:
+    return PROJECTS_DIR / project_id / "skills"
+
+
+def get_task_dir(task_id: str) -> Path:
+    d = TASKS_DIR / task_id
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def get_task_skills_dir(task_id: str) -> Path:
+    return TASKS_DIR / task_id / ".cody" / "skills"
+
 # Tool names that indicate file writes (used by on_tool_result detection)
 FILE_WRITE_TOOLS = frozenset({"write_file", "edit_file", "create_file"})
 
