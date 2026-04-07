@@ -103,8 +103,8 @@ daiflow/
 ├── ws_manager.py        # WebSocket channel pub/sub manager
 ├── agent_executor.py    # Unified run_agent() entry point for all AI tasks
 ├── session_ids.py       # Session ID construction helpers
-├── routers/             # FastAPI route handlers (7: projects, tasks, todos, sessions, jobs, skills, settings, ws)
-├── services/            # Business logic (11: git, review, task, project, cody, chat, skill, mcp, runner, repo_monitor, settings)
+├── routers/             # FastAPI route handlers (9: projects, tasks, todos, sessions, jobs, skills, settings, ws, conversations)
+├── services/            # Business logic (12: git, review, task, project, cody, chat, skill, mcp, runner, repo_monitor, settings, conversation)
 ├── agents/              # AgentConfig registry + definitions (init, plan, spec, review, todo_exec, todo_split)
 ├── runners/             # Runner backends (base protocol, cody_runner, claude_code_runner, cursor_runner)
 ├── workflow/            # State machines (task_machine, todo_machine) + orchestrator + pipeline
@@ -176,6 +176,10 @@ All AI interactions share a unified pattern: **SessionRunner** executes Cody →
 - `project:init:{project_id}` — project init aggregation bus
 - `chat:{request_id}` — ephemeral chat response stream (auto-cleaned on done)
 
+### Conversations Module
+
+A lightweight project-aware AI chat feature separate from the DevFlow workflow. Conversations copy project repos to `~/.daiflow/conversations/{conv_id}/code/` (removing `.git` to prevent accidental pushes — read-only context), sync skills, then enter `READY` state for open-ended chat. Uses the same `SessionRunner` + `WSManager` pattern as DevFlow stages. Channel naming: `project:init:{project_id}` (init bus), `session:{session_id}` (per-session events).
+
 ### Cody Session Strategy
 
 - Project knowledge generation: independent Cody session per knowledge type (concurrent)
@@ -218,8 +222,9 @@ Output: `~/.daiflow/projects/{project_id}/skills/{knowledge_type}/SKILL.md`
 | Skills | CRUD `/api/skills`, `POST .../link`, `DELETE .../unlink` |
 | MCP Servers | CRUD `/api/mcp-servers`, `POST .../test` |
 | Runner Configs | CRUD `/api/settings/runners` |
+| Conversations | CRUD `/api/conversations`, `POST .../init` |
 
-## Database Schema (13 tables)
+## Database Schema (14 tables)
 
 Defined in `daiflow/models.py`. All primary keys use UUID hex strings (`uuid.uuid4().hex`).
 
@@ -236,12 +241,14 @@ Defined in `daiflow/models.py`. All primary keys use UUID hex strings (`uuid.uui
 - **project_skills** — id, project_id (FK), skill_id (FK), symlink_path
 - **task_skills** — id, task_id (FK), skill_id (FK), symlink_path
 - **mcp_servers** — id, name (unique), command, args (JSON), env (JSON), enabled
+- **conversations** — id, name, project_id (FK), description, status (int), runner_id (FK nullable), created_at, updated_at
 
 ## Status Enums (IntEnum in models.py)
 
 - **TaskStatus:** 0=CREATED, 1=INITIALIZING, 2=PLANNING, 3=PLAN_LOCKED, 4=TODO_READY, 5=CODING, 6=REVIEWING, 7=DONE
 - **TodoStatus:** 0=PENDING, 1=RUNNING, 2=DONE, 3=FAILED, 4=SKIPPED
 - **SessionStatus:** 0=WAITING, 1=RUNNING, 2=DONE, 3=FAILED
+- **ConversationStatus:** 0=CREATING, 1=READY, 2=FAILED
 - **JobRunStatus:** 0=RUNNING, 1=SUCCESS, 2=FAILED
 
 ## Key File Locations
