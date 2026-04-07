@@ -1,0 +1,117 @@
+.conv-form {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  padding: 20px;
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.conv-form .form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.conv-form .form-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--t2);
+}
+
+.conv-form .form-field input,
+.conv-form .form-field select {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--r1);
+  background: var(--bg-1);
+  color: var(--t0);
+  font-size: 13px;
+}
+
+.conv-form .form-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.conv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.conv-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.conv-row:hover {
+  border-color: var(--border-hi);
+  background: var(--bg-3);
+}
+
+.conv-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.conv-name {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.conv-info {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 11px;
+  color: var(--t3);
+}
+
+.conv-project {
+  color: var(--t2);
+  background: var(--bg-3);
+  padding: 1px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.conv-desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 300px;
+}
+
+.conv-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-icon-sm {
+  background: none;
+  border: none;
+  color: var(--t3);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all .15s;
+}
+
+.btn-icon-sm:hover {
+  color: var(--red);
+  background: var(--bg-3);
+}

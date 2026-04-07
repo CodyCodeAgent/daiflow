@@ -3,7 +3,7 @@
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from daiflow.models import Project, Task, Todo
+from daiflow.models import Conversation, Project, Task, Todo
 
 
 async def get_or_404(db: AsyncSession, model, entity_id: str, label: str = "Entity"):
@@ -24,3 +24,7 @@ async def get_task_or_404(db: AsyncSession, task_id: str) -> Task:
 
 async def get_todo_or_404(db: AsyncSession, todo_id: str) -> Todo:
     return await get_or_404(db, Todo, todo_id, "Todo")
+
+
+async def get_conversation_or_404(db: AsyncSession, conv_id: str) -> Conversation:
+    return await get_or_404(db, Conversation, conv_id, "Conversation")

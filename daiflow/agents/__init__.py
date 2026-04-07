@@ -90,6 +90,7 @@ def get_agent_config(agent_type: str) -> AgentConfig:
 def _auto_register() -> None:
     """Import all agent modules to trigger their register_agent() calls."""
     from daiflow.agents import (  # noqa: F401
+        conversation_agent,
         init_agent,
         plan_agent,
         review_agent,

@@ -76,6 +76,7 @@ class Project(Base):
 
     repos = relationship("ProjectRepo", back_populates="project", cascade="all, delete-orphan")
     tasks = relationship("Task", back_populates="project", cascade="all, delete-orphan")
+    conversations = relationship("Conversation", back_populates="project", cascade="all, delete-orphan")
     project_skills = relationship("ProjectSkill", cascade="all, delete-orphan")
 
 
@@ -154,6 +155,27 @@ class Session(Base):
     started_at = Column(DateTime, nullable=True)
     finished_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=_now)
+
+
+class ConversationStatus(IntEnum):
+    CREATING = 0   # init in progress (copying code, syncing skills)
+    READY = 1      # can chat
+    FAILED = 2     # init failed
+
+
+class Conversation(Base):
+    __tablename__ = "conversations"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    name = Column(String, nullable=False)
+    project_id = Column(String, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
+    description = Column(Text, default="")
+    status = Column(Integer, default=0)  # ConversationStatus
+    runner_id = Column(String, ForeignKey("runner_configs.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime, default=_now)
+    updated_at = Column(DateTime, default=_now, onupdate=_now)
+
+    project = relationship("Project", back_populates="conversations")
 
 
 class JobRunStatus(IntEnum):

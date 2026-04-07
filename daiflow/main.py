@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 
 from daiflow.config import cleanup_old_logs, init_daiflow_dir
 from daiflow.database import init_db
-from daiflow.routers import jobs, projects, sessions, settings, skills, tasks, todos, ws
+from daiflow.routers import conversations, jobs, projects, sessions, settings, skills, tasks, todos, ws
 
 logger = logging.getLogger(__name__)
 
@@ -139,6 +139,7 @@ app.add_middleware(
 app.include_router(settings.router)
 app.include_router(projects.router)
 app.include_router(tasks.router)
+app.include_router(conversations.router)
 app.include_router(todos.router)
 app.include_router(sessions.router)
 app.include_router(skills.router)

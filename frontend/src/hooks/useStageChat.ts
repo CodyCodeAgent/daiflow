@@ -37,7 +37,7 @@ export interface ChatMessage {
 interface UseStageChatOptions {
   sessionId: string | null
   /** Chat stage — must match backend stage names */
-  stage: 'spec' | 'plan' | 'todo' | 'todo_exec' | 'review'
+  stage: 'spec' | 'plan' | 'todo' | 'todo_exec' | 'review' | 'conversation'
   /** Entity ID: task_id for plan/todo/review, todo_id for todo_exec */
   entityId: string
   onUpdated?: (event: WSEvent) => void
