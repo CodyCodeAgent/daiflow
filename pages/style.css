@@ -791,8 +791,9 @@ footer {
 @media (max-width: 1100px) {
   .hero-inner { grid-template-columns: 1fr; gap: 52px; }
   .hero-inner > :last-child { display: none; } /* hide terminal */
-  .features-grid  { grid-template-columns: repeat(2, 1fr); }
-  .footer-grid    { grid-template-columns: 1fr 1fr; gap: 40px; }
+  .features-grid    { grid-template-columns: repeat(2, 1fr); }
+  .philosophy-pillars { grid-template-columns: 1fr; }
+  .footer-grid      { grid-template-columns: 1fr 1fr; gap: 40px; }
   .stages-wrapper { flex-direction: column; }
   .stage          { border-right: none; border-bottom: 1px solid var(--border); }
   .stage:last-child { border-bottom: none; }
@@ -821,6 +822,98 @@ footer {
   .hero-cta   { flex-direction: column; }
   .btn-lg     { width: 100%; justify-content: center; }
   .techstack-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ══════════════════════════════════════
+   PHILOSOPHY
+══════════════════════════════════════ */
+.philosophy {
+  padding: 100px 0;
+  background: var(--bg-1);
+  border-top: 1px solid var(--border);
+}
+
+.philosophy-quote {
+  margin: 48px auto 56px;
+  max-width: 720px;
+  text-align: center;
+  padding: 32px 40px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-md);
+  border-left: 3px solid var(--teal);
+  border-radius: var(--r3);
+}
+.philosophy-quote blockquote {
+  font-size: 1.15rem;
+  color: var(--t0);
+  font-weight: 500;
+  line-height: 1.7;
+  letter-spacing: 0.01em;
+}
+.philosophy-quote cite {
+  display: block;
+  margin-top: 14px;
+  font-size: 0.82rem;
+  color: var(--t2);
+  font-style: normal;
+  font-family: var(--mono);
+}
+
+.philosophy-pillars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 48px;
+}
+
+.pillar-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r3);
+  padding: 32px 28px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.pillar-card:hover {
+  border-color: var(--border-hi);
+  box-shadow: var(--glow);
+}
+.pillar-icon {
+  font-size: 2rem;
+  margin-bottom: 16px;
+}
+.pillar-card h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--t0);
+  margin-bottom: 10px;
+}
+.pillar-card p {
+  font-size: 0.875rem;
+  color: var(--t1);
+  line-height: 1.75;
+}
+
+.philosophy-link {
+  text-align: center;
+}
+.philosophy-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  background: transparent;
+  border: 1px solid var(--border-hi);
+  border-radius: var(--r2);
+  color: var(--teal);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.philosophy-link-btn:hover {
+  background: rgba(45, 212, 191, 0.08);
+  box-shadow: 0 0 20px rgba(45, 212, 191, 0.15);
+  text-decoration: none;
 }
 
 /* ══════════════════════════════════════

@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DaiFlow — 本地 AI 编程工作台</title>
-  <meta name="description" content="DaiFlow 是一个本地 AI 编程工作台，将从需求到 MR 的完整开发流程产品化。支持技术方案生成、任务拆解、AI 编码与代码审查。" />
-  <meta property="og:title"       content="DaiFlow — 本地 AI 编程工作台" />
-  <meta property="og:description" content="从需求到 MR，全流程 AI 辅助开发。完全本地运行，数据不离机。" />
+  <title>DaiFlow — Harness Engineering 实践</title>
+  <meta name="description" content="DaiFlow 是 Harness Engineering 的具体实践 —— 用结构化工作流约束 AI，让软件交付从"祈祷"变成"流水线"。人类掌舵，AI 执行。" />
+  <meta property="og:title"       content="DaiFlow — Harness Engineering 实践" />
+  <meta property="og:description" content="同一个模型，换个 Harness，成功率从 42% 干到 78%。DaiFlow 把完整开发流程变成可约束、可审查、可重入的结构化工作流。" />
   <meta property="og:image"       content="./icon.png" />
   <meta property="og:type"        content="website" />
   <link rel="icon" type="image/png" href="./icon.png" />
@@ -26,6 +26,7 @@
     </a>
 
     <ul class="nav-links">
+      <li><a href="#philosophy">设计理念</a></li>
       <li><a href="#features">功能特性</a></li>
       <li><a href="#workflow">工作流</a></li>
       <li><a href="#runners">Runner</a></li>
@@ -55,6 +56,7 @@
 
 <!-- Mobile nav panel -->
 <div id="nav-mobile-panel" class="nav-mobile-panel">
+  <a href="#philosophy">设计理念</a>
   <a href="#features">功能特性</a>
   <a href="#workflow">工作流</a>
   <a href="#runners">Runner</a>
@@ -75,16 +77,16 @@
     <div class="hero-copy">
       <div class="hero-badge">
         <span class="live-dot"></span>
-        v1.0.0 正式发布
+        v1.0.1 正式发布
       </div>
 
       <h1>
-        本地 AI<br>
-        <span class="gradient-text">编程工作台</span>
+        让 AI 在<br>
+        <span class="gradient-text">轨道上跑</span>
       </h1>
 
       <p class="hero-sub">
-        将开发全流程产品化 —— 从需求分析、技术方案、任务拆解，到 AI 编码实现与代码审查，每个环节都有 AI 相伴。数据完全本地，代码不离机。
+        AI 不是难点，Harness 才是。DaiFlow 将软件交付流程变成可约束、可追踪、可重入的结构化工作流 —— 人类掌舵，AI 执行，每个关键节点都有人工审批。
       </p>
 
       <div class="hero-cta">
@@ -106,11 +108,11 @@
       <div class="hero-meta">
         <div class="meta-item">
           <div class="meta-value" data-count="5" data-suffix=" 阶段">5 阶段</div>
-          <div class="meta-label">完整开发工作流</div>
+          <div class="meta-label">结构化工作流</div>
         </div>
         <div class="meta-item">
-          <div class="meta-value" data-count="3" data-suffix=" 种">3 种</div>
-          <div class="meta-label">可插拔 Runner</div>
+          <div class="meta-value">+36%</div>
+          <div class="meta-label">Harness 带来的提升</div>
         </div>
         <div class="meta-item">
           <div class="meta-value">100%</div>
@@ -134,13 +136,62 @@
   </div>
 </section>
 
+<!-- ══════════ PHILOSOPHY ══════════ -->
+<section class="philosophy" id="philosophy">
+  <div class="container">
+    <div class="anim">
+      <div class="section-label">设计理念</div>
+      <h2 class="section-title">Harness Engineering</h2>
+      <p class="section-desc">
+        决定 Agent 干活质量的，不是模型多聪明，是你给它搭的环境多靠谱。<br>
+        同一个模型，好的 Harness 比差的 Harness 成功率高出近一倍。
+      </p>
+    </div>
+
+    <div class="philosophy-quote anim anim-d1">
+      <blockquote>
+        "严谨的工程设计并没有因为 AI 而变得简单——它变得更重要了。"
+      </blockquote>
+      <cite>— OpenAI Harness Engineering, 2026</cite>
+    </div>
+
+    <div class="philosophy-pillars anim anim-d2">
+      <div class="pillar-card">
+        <div class="pillar-icon">📖</div>
+        <h3>上下文工程</h3>
+        <p>Agent 看不到的东西等于不存在。DaiFlow 通过四层知识生成（结构 / 业务流 / 模块 / 索引）和 constitution.md，在每次任务前为 AI 装载完整的项目认知。</p>
+      </div>
+      <div class="pillar-card">
+        <div class="pillar-icon">🚦</div>
+        <h3>架构约束</h3>
+        <p>不跟 Agent 讲道理，直接拦住它。五阶段状态机严格管控流转，Plan 锁定、人工确认、Coding 审批 —— 每个关键节点都有检查点，AI 在授权范围内执行。</p>
+      </div>
+      <div class="pillar-card">
+        <div class="pillar-icon">📊</div>
+        <h3>熵管理</h3>
+        <p>AI 生成的代码天然趋向混乱。DaiFlow 用 JSONL 日志持久化每次 AI 执行过程，支持崩溃恢复与会话重入，让系统越跑越可靠而非越跑越乱。</p>
+      </div>
+    </div>
+
+    <div class="philosophy-link anim anim-d3">
+      <a href="https://sut-gc.github.io/blog/2026/03/24/harness-engineering-ai-agent-%E6%97%B6%E4%BB%A3%E7%9A%84%E5%B7%A5%E7%A8%8B%E8%8C%83%E5%BC%8F%E9%9D%A9%E5%91%BD/" target="_blank" rel="noopener" class="philosophy-link-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+          <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+        阅读完整理念文章：《不卷模型，开始卷 Harness 了》
+      </a>
+    </div>
+  </div>
+</section>
+
 <!-- ══════════ FEATURES ══════════ -->
 <section class="features" id="features">
   <div class="container">
     <div class="anim">
       <div class="section-label">功能特性</div>
-      <h2 class="section-title">为开发者打造的 AI 工作台</h2>
-      <p class="section-desc">不是单次对话，而是完整的可追踪开发流水线。状态持久化、可重入、可审查。</p>
+      <h2 class="section-title">为开发者打造的 AI Harness</h2>
+      <p class="section-desc">不是让 AI 替你写代码，而是让 AI 在你设计的轨道上跑。状态持久化、可重入、可审查。</p>
     </div>
 
     <div class="features-grid">
@@ -441,13 +492,14 @@
           <li><a href="https://github.com/CodyCodeAgent/daiflow/issues" target="_blank" rel="noopener">问题反馈</a></li>
           <li><a href="https://github.com/CodyCodeAgent/daiflow/blob/main/CHANGELOG.md" target="_blank" rel="noopener">更新日志</a></li>
           <li><a href="https://github.com/CodyCodeAgent/daiflow/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">贡献指南</a></li>
+          <li><a href="https://sut-gc.github.io/blog/2026/03/24/harness-engineering-ai-agent-%E6%97%B6%E4%BB%A3%E7%9A%84%E5%B7%A5%E7%A8%8B%E8%8C%83%E5%BC%8F%E9%9D%A9%E5%91%BD/" target="_blank" rel="noopener">设计理念文章</a></li>
         </ul>
       </div>
     </div>
 
     <div class="footer-bottom">
       <span>© 2026 DaiFlow. Released under the <a href="https://github.com/CodyCodeAgent/daiflow/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</span>
-      <span style="font-family: var(--mono); font-size: 12px;">v1.0.0</span>
+      <span style="font-family: var(--mono); font-size: 12px;">v1.0.1</span>
     </div>
   </div>
 </footer>
