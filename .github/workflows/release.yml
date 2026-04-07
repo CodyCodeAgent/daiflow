@@ -36,9 +36,10 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          # P12 code-signing certificate (optional — unsigned build still works locally)
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          # Disable auto certificate discovery; only sign when CSC_LINK is explicitly set
+          CSC_IDENTITY_AUTO_DISCOVERY: false
         run: cd electron && npm run dist:mac
 
       - name: Upload macOS artifacts
