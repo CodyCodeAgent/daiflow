@@ -39,6 +39,8 @@
   to { transform: rotate(360deg); }
 }
 
+/* ── Chat body: fills remaining space, overrides ChatPanel fixed width ── */
+
 .conv-chat-body {
   flex: 1;
   min-height: 0;
@@ -46,38 +48,156 @@
   overflow: hidden;
 }
 
-/* ── Left: Project Context ── */
-
-.conv-context {
-  padding: 20px;
-  overflow-y: auto;
-  height: 100%;
+.conv-chat-body .chat-panel {
+  width: 100%;
+  flex: 1;
+  border-left: none;
 }
 
-.conv-context-section {
-  margin-bottom: 24px;
-}
+/* ── Floating trigger — same pattern as ConstitutionDrawer, right edge ── */
 
-.conv-context-section:last-child {
-  margin-bottom: 0;
-}
-
-.conv-context-title {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.conv-ctx-trigger {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  cursor: pointer;
   color: var(--t2);
-  margin-bottom: 10px;
+  transition: background 0.15s, color 0.15s;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.12);
+  writing-mode: vertical-rl;
 }
 
-.conv-context-project-name {
+.conv-ctx-trigger:hover {
+  background: var(--bg-3);
+  color: var(--blue);
+}
+
+.conv-ctx-trigger-icon {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
+  writing-mode: horizontal-tb;
   margin-bottom: 4px;
 }
 
-.conv-context-desc {
+.conv-ctx-trigger-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* ── Backdrop ── */
+
+.conv-ctx-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(2px);
+}
+
+/* ── Drawer — slides in from the right (same as ConstitutionDrawer) ── */
+
+.conv-ctx-drawer {
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 420px;
+  max-width: 90vw;
+  z-index: 400;
+  background: var(--bg-1);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.2);
+}
+
+.conv-ctx-drawer.open {
+  transform: translateX(0);
+}
+
+.conv-ctx-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.conv-ctx-drawer-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--t1);
+}
+
+.conv-ctx-close-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  color: var(--t3);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.conv-ctx-close-btn:hover {
+  background: var(--bg-3);
+  color: var(--t1);
+}
+
+.conv-ctx-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+/* ── Sections ── */
+
+.conv-ctx-section {
+  margin-bottom: 22px;
+}
+
+.conv-ctx-section:last-child {
+  margin-bottom: 0;
+}
+
+.conv-ctx-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--t3);
+  margin-bottom: 8px;
+}
+
+.conv-ctx-project-name {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--t1);
+}
+
+.conv-ctx-desc {
   font-size: 12px;
   color: var(--t2);
   line-height: 1.5;
@@ -85,7 +205,7 @@
 
 /* ── Repos ── */
 
-.conv-context-repos {
+.conv-ctx-repos {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -127,7 +247,7 @@
 
 /* ── Skills ── */
 
-.conv-context-skills {
+.conv-ctx-skills {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;

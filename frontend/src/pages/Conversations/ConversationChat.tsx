@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Topbar from '../../components/Shell/Topbar'
 import ChatPanel from '../../components/ChatPanel/ChatPanel'
-import ResizableSplitPane from '../../components/ResizableSplitPane/ResizableSplitPane'
 import Loading from '../../components/Loading/Loading'
 import { getConversation, getProject, retryConversationInit } from '../../api'
 import { getProjectSkills } from '../../api/skills'
@@ -25,10 +24,10 @@ export default function ConversationChat() {
   const [project, setProject] = useState<ProjectData | null>(null)
   const [skills, setSkills] = useState<SkillBriefData[]>([])
   const [loading, setLoading] = useState(true)
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   const sessionId = conversationId ? sessionIds.conversationChat(conversationId) : null
 
-  // Load conversation + project + skills
   const loadConv = useCallback(async () => {
     if (!conversationId) return
     try {
@@ -46,7 +45,6 @@ export default function ConversationChat() {
 
   useEffect(() => { loadConv() }, [loadConv])
 
-  // Poll while init is in progress
   useEffect(() => {
     if (!conv || conv.status !== ConversationStatus.CREATING) return
     const timer = setInterval(async () => {
@@ -60,6 +58,13 @@ export default function ConversationChat() {
     }, 2000)
     return () => clearInterval(timer)
   }, [conv?.id, conv?.status])
+
+  useEffect(() => {
+    if (!drawerOpen) return
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setDrawerOpen(false) }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [drawerOpen])
 
   const { messages, sendMessage, streaming, cancelling, stopGeneration } = useStageChat({
     sessionId: conv?.status === ConversationStatus.READY ? sessionId : null,
@@ -109,69 +114,79 @@ export default function ConversationChat() {
         </div>
       )}
 
+      {/* Chat fills the full body */}
       <div className="conv-chat-body">
-        <ResizableSplitPane
-          right={
-            <ChatPanel
-              messages={messages}
-              onSend={sendMessage}
-              responding={streaming}
-              cancelling={cancelling}
-              onStop={stopGeneration}
-              title={t('conversations.chat_title')}
-              disabled={!isReady}
-            />
-          }
-          initialRightWidth={480}
-          minRightWidth={320}
-        >
-          {/* Left: Project Context Sidebar */}
-          <div className="conv-context">
-            <div className="conv-context-section">
-              <h3 className="conv-context-title">{t('conversations.project')}</h3>
-              <div className="conv-context-project-name">{project?.name}</div>
-              {project?.description && (
-                <p className="conv-context-desc">{project.description}</p>
-              )}
-            </div>
+        <ChatPanel
+          messages={messages}
+          onSend={sendMessage}
+          responding={streaming}
+          cancelling={cancelling}
+          onStop={stopGeneration}
+          title={t('conversations.chat_title')}
+          disabled={!isReady}
+        />
+      </div>
 
-            {repos.length > 0 && (
-              <div className="conv-context-section">
-                <h3 className="conv-context-title">{t('form.code_repos')}</h3>
-                <div className="conv-context-repos">
-                  {repos.map((r: RepoData) => (
-                    <div key={r.id} className="conv-repo-item">
-                      <span className="conv-repo-type">{r.repo_type}</span>
-                      <span className="conv-repo-url">{r.local_path || r.git_url}</span>
-                      {r.description && <span className="conv-repo-desc">{r.description}</span>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+      {/* Floating trigger — position:fixed, left edge, same pattern as TaskInfoDrawer */}
+      <button className="conv-ctx-trigger" onClick={() => setDrawerOpen(true)} title={t('conversations.project')}>
+        <span className="conv-ctx-trigger-icon">☰</span>
+        <span className="conv-ctx-trigger-label">{t('conversations.project')}</span>
+      </button>
 
-            {skills.length > 0 && (
-              <div className="conv-context-section">
-                <h3 className="conv-context-title">{t('nav.skills')} ({skills.length})</h3>
-                <div className="conv-context-skills">
-                  {skills.map(s => (
-                    <div key={s.id} className="conv-skill-item">
-                      <span className="conv-skill-name">{s.name}</span>
-                      {s.description && <span className="conv-skill-desc">{s.description}</span>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+      {/* Backdrop */}
+      {drawerOpen && <div className="conv-ctx-backdrop" onClick={() => setDrawerOpen(false)} />}
 
-            {conv.description && (
-              <div className="conv-context-section">
-                <h3 className="conv-context-title">{t('conversations.description')}</h3>
-                <p className="conv-context-desc">{conv.description}</p>
-              </div>
+      {/* Drawer — position:fixed, slides in from left */}
+      <div className={`conv-ctx-drawer ${drawerOpen ? 'open' : ''}`}>
+        <div className="conv-ctx-drawer-header">
+          <div className="conv-ctx-drawer-title">{t('conversations.project')}</div>
+          <button className="conv-ctx-close-btn" onClick={() => setDrawerOpen(false)}>✕</button>
+        </div>
+        <div className="conv-ctx-drawer-body">
+
+          <div className="conv-ctx-section">
+            <div className="conv-ctx-project-name">{project?.name}</div>
+            {project?.description && (
+              <p className="conv-ctx-desc">{project.description}</p>
             )}
           </div>
-        </ResizableSplitPane>
+
+          {repos.length > 0 && (
+            <div className="conv-ctx-section">
+              <h3 className="conv-ctx-title">{t('form.code_repos')}</h3>
+              <div className="conv-ctx-repos">
+                {repos.map((r: RepoData) => (
+                  <div key={r.id} className="conv-repo-item">
+                    <span className="conv-repo-type">{r.repo_type}</span>
+                    <span className="conv-repo-url">{r.local_path || r.git_url}</span>
+                    {r.description && <span className="conv-repo-desc">{r.description}</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {skills.length > 0 && (
+            <div className="conv-ctx-section">
+              <h3 className="conv-ctx-title">{t('nav.skills')} ({skills.length})</h3>
+              <div className="conv-ctx-skills">
+                {skills.map(s => (
+                  <div key={s.id} className="conv-skill-item">
+                    <span className="conv-skill-name">{s.name}</span>
+                    {s.description && <span className="conv-skill-desc">{s.description}</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {conv.description && (
+            <div className="conv-ctx-section">
+              <h3 className="conv-ctx-title">{t('conversations.description')}</h3>
+              <p className="conv-ctx-desc">{conv.description}</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
