@@ -1,5 +1,11 @@
 # DaiFlow
 
+[![CI](https://github.com/CodyCodeAgent/daiflow/actions/workflows/ci.yml/badge.svg)](https://github.com/CodyCodeAgent/daiflow/actions/workflows/ci.yml)
+[![Release](https://github.com/CodyCodeAgent/daiflow/actions/workflows/release.yml/badge.svg)](https://github.com/CodyCodeAgent/daiflow/actions/workflows/release.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-blue)](https://www.python.org/)
+[![GitHub release](https://img.shields.io/github/v/release/CodyCodeAgent/daiflow)](https://github.com/CodyCodeAgent/daiflow/releases)
+
 本地 AI 编程工作台，将开发全流程（需求 → 技术方案 → 任务拆解 → 编码实现 → 代码审查 → 提交 MR）产品化，通过内置 AI 引擎（Cody SDK）理解项目上下文并辅助开发者。
 
 ## 功能概览
