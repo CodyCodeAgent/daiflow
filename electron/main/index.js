@@ -126,7 +126,15 @@ async function onAppReady() {
     }
   } catch (err) {
     console.error('[startup] Fatal error:', err);
-    dialog.showErrorBox('DaiFlow 启动失败', err.message);
+    // 只取第一行作为摘要，完整信息写到 console
+    const summary = (err.message || String(err)).split('\n')[0].slice(0, 200);
+    await dialog.showMessageBox({
+      type: 'error',
+      title: 'DaiFlow 启动失败',
+      message: summary,
+      detail: '请查看日志获取详细信息，或重新安装应用。',
+      buttons: ['退出'],
+    });
     app.quit();
   }
 }
