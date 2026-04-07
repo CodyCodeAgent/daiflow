@@ -43,9 +43,69 @@ jobs:
             electron/dist/*.zip
           if-no-files-found: error
 
+  # ── Windows (x64 NSIS installer) ───────────────────────────────────────────
+  build-win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: electron/package-lock.json
+
+      - name: Install Electron deps
+        run: cd electron && npm ci
+
+      - name: Build frontend
+        run: cd frontend && npm ci && npm run build
+
+      - name: Package (Windows)
+        run: cd electron && npx electron-builder --win --publish never
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-dist
+          path: electron/dist/*.exe
+          if-no-files-found: error
+
+  # ── Linux (AppImage + deb, x64) ────────────────────────────────────────────
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: electron/package-lock.json
+
+      - name: Install Electron deps
+        run: cd electron && npm ci
+
+      - name: Build frontend
+        run: cd frontend && npm ci && npm run build
+
+      - name: Package (Linux)
+        run: cd electron && npx electron-builder --linux --publish never
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-dist
+          path: |
+            electron/dist/*.AppImage
+            electron/dist/*.deb
+          if-no-files-found: error
+
   # ── Create GitHub Release ───────────────────────────────────────────────────
   release:
-    needs: [build-mac]
+    needs: [build-mac, build-win, build-linux]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
