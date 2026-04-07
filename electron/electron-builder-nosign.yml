@@ -55,7 +55,7 @@ mac:
         - arm64
 
 win:
-  icon: icons/icon.ico
+  icon: icons/icon.png
   extraResources:
     - from: "python-runtime/win32-x64"
       to: "python-x64"
@@ -68,7 +68,6 @@ win:
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
-  installerIcon: icons/icon.ico
 
 linux:
   icon: icons/icon.png
