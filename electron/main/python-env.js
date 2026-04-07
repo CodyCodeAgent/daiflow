@@ -62,30 +62,39 @@ function meetsMinVersion(version, minVersion = MIN_PYTHON_VERSION) {
 
 /**
  * 获取内置 Python 的路径（如果应用已打包）。
- * 根据当前架构选择对应的 Python 版本。
+ * 根据当前平台和架构选择对应的 Python 版本。
  */
 function getBundledPythonPath() {
   const { app } = require('electron');
+  const platform = process.platform; // darwin | win32 | linux
   const arch = process.arch === 'arm64' ? 'arm64' : 'x64';
+
+  // Python 可执行文件相对于 runtime 根目录的路径
+  function pythonExe(runtimeRoot) {
+    if (platform === 'win32') return path.join(runtimeRoot, 'python.exe');
+    return path.join(runtimeRoot, 'bin', 'python3');
+  }
 
   if (!app.isPackaged) {
     // 开发模式：检查本地 python-runtime 目录
-    const devPythonPath = path.join(__dirname, '..', 'python-runtime', `darwin-${arch}`, 'bin', 'python3');
-    if (fs.existsSync(devPythonPath)) {
-      return devPythonPath;
+    let runtimeDir;
+    if (platform === 'darwin') {
+      runtimeDir = path.join(__dirname, '..', 'python-runtime', `darwin-${arch}`);
+    } else if (platform === 'win32') {
+      runtimeDir = path.join(__dirname, '..', 'python-runtime', 'win32-x64');
+    } else {
+      runtimeDir = path.join(__dirname, '..', 'python-runtime', 'linux-x64');
     }
-    return null;
+    const devPath = pythonExe(runtimeDir);
+    return fs.existsSync(devPath) ? devPath : null;
   }
 
   // 打包模式：从 resources 目录获取
-  const bundledPythonPath = path.join(
-    process.resourcesPath,
-    `python-${arch}`,
-    'bin',
-    'python3'
-  );
-
-  return fs.existsSync(bundledPythonPath) ? bundledPythonPath : null;
+  // macOS 有 arm64 和 x64 两个目录；Windows/Linux 只有 x64
+  const runtimeName = platform === 'darwin' ? `python-${arch}` : 'python-x64';
+  const runtimeRoot = path.join(process.resourcesPath, runtimeName);
+  const bundledPath = pythonExe(runtimeRoot);
+  return fs.existsSync(bundledPath) ? bundledPath : null;
 }
 
 /**

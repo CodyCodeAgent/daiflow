@@ -62,6 +62,10 @@ jobs:
       - name: Build frontend
         run: cd frontend && npm ci && npm run build
 
+      - name: Download bundled Python runtime
+        shell: bash
+        run: bash electron/scripts/download-python.sh
+
       - name: Package (Windows)
         run: cd electron && npx electron-builder --win --publish never
 
@@ -90,6 +94,9 @@ jobs:
 
       - name: Build frontend
         run: cd frontend && npm ci && npm run build
+
+      - name: Download bundled Python runtime
+        run: bash electron/scripts/download-python.sh
 
       - name: Package (Linux)
         run: cd electron && npx electron-builder --linux --publish never

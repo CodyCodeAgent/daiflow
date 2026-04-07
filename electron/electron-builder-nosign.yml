@@ -33,19 +33,17 @@ extraResources:
     to: "backend/requirements.txt"
   - from: "../pyproject.toml"
     to: "backend/pyproject.toml"
-  # Bundled Python runtime (arm64 & x64)
-  - from: "python-runtime/darwin-arm64"
-    to: "python-arm64"
-    filter:
-      - "**/*"
-  - from: "python-runtime/darwin-x64"
-    to: "python-x64"
-    filter:
-      - "**/*"
 
 mac:
   category: public.app-category.developer-tools
   icon: icons/icon.icns
+  extraResources:
+    - from: "python-runtime/darwin-arm64"
+      to: "python-arm64"
+      filter: ["**/*"]
+    - from: "python-runtime/darwin-x64"
+      to: "python-x64"
+      filter: ["**/*"]
   target:
     - target: dmg
       arch:
@@ -56,9 +54,12 @@ mac:
         - x64
         - arm64
 
-
 win:
   icon: icons/icon.ico
+  extraResources:
+    - from: "python-runtime/win32-x64"
+      to: "python-x64"
+      filter: ["**/*"]
   target:
     - target: nsis
       arch:
@@ -70,8 +71,12 @@ nsis:
   installerIcon: icons/icon.ico
 
 linux:
-  icon: icons
+  icon: icons/icon.png
   category: Development
+  extraResources:
+    - from: "python-runtime/linux-x64"
+      to: "python-x64"
+      filter: ["**/*"]
   target:
     - target: AppImage
       arch:
