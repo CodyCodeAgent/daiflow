@@ -4,7 +4,7 @@ import ChatPanel from '../ChatPanel/ChatPanel'
 import type { ChatSendOptions } from '../ChatPanel/ChatPanel'
 import ResizableSplitPane from '../ResizableSplitPane/ResizableSplitPane'
 import Loading from '../Loading/Loading'
-import ConstitutionDrawer from '../ConstitutionDrawer/ConstitutionDrawer'
+import TaskInfoDrawer from '../ConstitutionDrawer/ConstitutionDrawer'
 import { useLocale } from '../../hooks/useLocale'
 import { TaskStatus } from '../../types/enums'
 import type { TaskData } from '../../api'
@@ -114,8 +114,7 @@ export default function StageLayout({
           {actions}
         </div>
       )}
-      {/* Constitution drawer — always available as a reference */}
-      <ConstitutionDrawer taskId={taskId} />
+      <TaskInfoDrawer task={task} />
     </div>
   )
 }

@@ -10,7 +10,7 @@
   align-items: center;
   gap: 4px;
   padding: 12px 8px;
-  background: var(--bg2);
+  background: var(--bg-2);
   border: 1px solid var(--border);
   border-right: none;
   border-radius: 8px 0 0 8px;
@@ -22,8 +22,8 @@
 }
 
 .constitution-trigger:hover {
-  background: var(--bg3);
-  color: var(--accent);
+  background: var(--bg-3);
+  color: var(--blue);
 }
 
 .constitution-trigger-icon {
@@ -58,7 +58,7 @@
   width: 480px;
   max-width: 95vw;
   z-index: 400;
-  background: var(--bg1);
+  background: var(--bg-1);
   border-left: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -74,7 +74,7 @@
 /* ── Drawer header ────────────────────────────────────────────────────────── */
 .constitution-drawer-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   padding: 20px 24px 16px;
   border-bottom: 1px solid var(--border);
@@ -85,12 +85,6 @@
   font-size: 15px;
   font-weight: 600;
   color: var(--t1);
-  margin-bottom: 3px;
-}
-
-.constitution-drawer-desc {
-  font-size: 12px;
-  color: var(--t3);
 }
 
 .constitution-close-btn {
@@ -103,11 +97,10 @@
   border-radius: 4px;
   line-height: 1;
   flex-shrink: 0;
-  margin-top: -2px;
 }
 
 .constitution-close-btn:hover {
-  background: var(--bg3);
+  background: var(--bg-3);
   color: var(--t1);
 }
 
@@ -115,31 +108,105 @@
 .constitution-drawer-body {
   flex: 1;
   overflow-y: auto;
-  padding: 20px 24px;
+  padding: 4px 0 24px;
 }
 
-.constitution-loading {
+/* ── Sections ─────────────────────────────────────────────────────────────── */
+.task-info-section {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.task-info-section:last-child {
+  border-bottom: none;
+}
+
+.task-info-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
   color: var(--t3);
-  text-align: center;
-  padding: 40px 0;
-  font-size: 13px;
+  margin-bottom: 10px;
 }
 
-.constitution-empty {
-  text-align: center;
-  padding: 60px 24px;
+/* ── Meta rows (key-value) ────────────────────────────────────────────────── */
+.task-info-meta-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.task-info-meta-key {
   color: var(--t3);
+  flex-shrink: 0;
+  width: 52px;
 }
 
-.constitution-empty-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-  opacity: 0.3;
+.task-info-meta-val {
+  color: var(--t1);
+  word-break: break-word;
 }
 
-.constitution-empty p {
+.task-info-branch {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 12px;
+  color: var(--blue);
+  background: var(--bg-2);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+/* ── Repo rows ────────────────────────────────────────────────────────────── */
+.task-info-repo-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.task-info-repo-type {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--bg-3);
+  color: var(--t2);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+.task-info-repo-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.task-info-repo-url {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  color: var(--t2);
+  word-break: break-all;
+}
+
+.task-info-repo-path {
+  color: var(--t3);
+  word-break: break-all;
+}
+
+/* ── States ───────────────────────────────────────────────────────────────── */
+.task-info-loading {
+  color: var(--t3);
   font-size: 13px;
-  line-height: 1.6;
-  max-width: 280px;
-  margin: 0 auto;
+  padding: 4px 0;
+}
+
+.task-info-empty {
+  color: var(--t3);
+  font-size: 13px;
+  font-style: italic;
 }

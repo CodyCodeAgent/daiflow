@@ -122,6 +122,14 @@ export function useCodingStage(taskId: string | undefined) {
     }
   }, [])
 
+  // While run-all is in progress, poll every 2s to pick up todo status transitions
+  // (PENDING→RUNNING) that aren't broadcast via WebSocket.
+  useEffect(() => {
+    if (!isRunAllInProgress) return
+    const timer = setInterval(loadData, 2000)
+    return () => clearInterval(timer)
+  }, [isRunAllInProgress, loadData])
+
   const agent = useAgent({
     sessionId,
     stage: 'todo_exec',

@@ -247,13 +247,19 @@ const zh: Record<TranslationKey, string> = {
   'todo.priority_p2': 'P2',
   'todo.priority_p3': 'P3',
 
-  // ConstitutionDrawer
-  'constitution.button': '项目规范',
-  'constitution.title': '项目规范（Constitution）',
-  'constitution.desc': '本项目的 AI 开发准则与约束',
-  'constitution.loading': '加载项目规范...',
-  'constitution.not_found': '未找到 constitution.md，请运行项目初始化生成。',
-  'constitution.close': '关闭',
+  // TaskInfoDrawer
+  'task_info.button': '任务详情',
+  'task_info.title': '任务详情',
+  'task_info.section.basic': '基本信息',
+  'task_info.section.project': '关联项目',
+  'task_info.section.prd': '需求文档（PRD）',
+  'task_info.section.tech_plan': '技术方案',
+  'task_info.name': '名称',
+  'task_info.description': '描述',
+  'task_info.branch': '分支',
+  'task_info.project_name': '项目',
+  'task_info.no_content': '暂无内容',
+  'task_info.loading_project': '加载项目信息...',
 
   // CodingStage
   'coding.todos_header': 'TODOs',

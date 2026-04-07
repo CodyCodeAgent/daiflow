@@ -400,7 +400,7 @@ export async function uploadChatImage(taskId: string, file: File): Promise<{ pat
 }
 
 // ── Artifact API ──
-export type ArtifactName = 'plan' | 'spec' | 'research' | 'data-model' | 'tasks' | 'constitution'
+export type ArtifactName = 'plan' | 'spec' | 'research' | 'data-model' | 'tasks'
 
 export interface ArtifactResponse {
   content: string

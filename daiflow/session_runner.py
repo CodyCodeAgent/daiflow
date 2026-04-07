@@ -325,15 +325,33 @@ def _inject_image_references(image_paths: list[str]) -> str:
 
 
 async def _persist_runner_session_id(session_id: str, runner_sid: str):
-    """Save runner_session_id to Session DB record for multi-turn chat continuity."""
+    """Save runner_session_id to Session DB record for multi-turn chat continuity.
+
+    If no Session record exists (e.g. review stage which never runs SessionRunner.run()),
+    creates a minimal record so subsequent chats can reuse the same Cody session.
+    """
     try:
         from daiflow.database import get_background_db
-        from daiflow.models import Session
+        from daiflow.models import Session, SessionStatus
         async with get_background_db() as db:
             session = await db.get(Session, session_id)
             if session:
                 session.cody_session_id = runner_sid
-                await db.commit()
+            else:
+                # Parse task_id and type from business session_id (e.g. "task:{id}:review")
+                parts = session_id.split(":")
+                entity_type = parts[0] if parts else ""
+                entity_id = parts[1] if len(parts) >= 2 else None
+                stage = parts[2] if len(parts) >= 3 else "chat"
+                task_id = entity_id if entity_type == "task" else None
+                db.add(Session(
+                    session_id=session_id,
+                    task_id=task_id,
+                    type=stage,
+                    status=SessionStatus.DONE,
+                    cody_session_id=runner_sid,
+                ))
+            await db.commit()
     except Exception:
         logger.debug("Failed to persist runner_session_id for %s", session_id, exc_info=True)
 
@@ -393,6 +411,7 @@ async def run_stage_chat(
         _active_chats[chat_channel] = cancel_event
 
     tracker = _ToolCallTracker()
+    done_sent = False
 
     try:
         async with asyncio.timeout(STREAM_TIMEOUT_SECONDS):
@@ -412,6 +431,7 @@ async def run_stage_chat(
                     runner_sid = event.get("runner_session_id")
                     if runner_sid:
                         await _persist_runner_session_id(session_id, runner_sid)
+                    done_sent = True
                     yield {"type": "done"}
                     return
 
@@ -436,10 +456,11 @@ async def run_stage_chat(
     finally:
         if chat_channel:
             _active_chats.pop(chat_channel, None)
-        # Always send done so frontend chat handler cleans up
-        done_event = {"type": "done", "ts": _now_iso()}
-        await append_log(session_id, done_event)
-        yield done_event
+        # Only send done if not already sent in the try block (error/timeout paths)
+        if not done_sent:
+            done_event = {"type": "done", "ts": _now_iso()}
+            await append_log(session_id, done_event)
+            yield done_event
 
 
 def _extract_file_path(event: dict) -> str:

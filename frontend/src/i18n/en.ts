@@ -245,13 +245,19 @@ const en = {
   'todo.priority_p2': 'P2',
   'todo.priority_p3': 'P3',
 
-  // ConstitutionDrawer
-  'constitution.button': 'Constitution',
-  'constitution.title': 'Project Constitution',
-  'constitution.desc': 'AI guidelines and constraints for this project',
-  'constitution.loading': 'Loading constitution...',
-  'constitution.not_found': 'No constitution.md found. Run project init to generate it.',
-  'constitution.close': 'Close',
+  // TaskInfoDrawer
+  'task_info.button': 'Task Info',
+  'task_info.title': 'Task Details',
+  'task_info.section.basic': 'Basic Info',
+  'task_info.section.project': 'Project',
+  'task_info.section.prd': 'Requirements (PRD)',
+  'task_info.section.tech_plan': 'Tech Plan',
+  'task_info.name': 'Name',
+  'task_info.description': 'Desc',
+  'task_info.branch': 'Branch',
+  'task_info.project_name': 'Project',
+  'task_info.no_content': 'No content',
+  'task_info.loading_project': 'Loading project...',
 
   // CodingStage
   'coding.todos_header': 'TODOs',
