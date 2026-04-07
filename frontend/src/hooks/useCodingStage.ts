@@ -122,6 +122,9 @@ export function useCodingStage(taskId: string | undefined) {
     }
   }, [])
 
+  // Derived: true when a run-all loop is active (optimistic OR confirmed by API)
+  const isRunAllInProgress = optimisticRunAll || (task?.run_all_in_progress ?? false)
+
   // While run-all is in progress, poll every 2s to pick up todo status transitions
   // (PENDING→RUNNING) that aren't broadcast via WebSocket.
   useEffect(() => {
@@ -149,9 +152,6 @@ export function useCodingStage(taskId: string | undefined) {
   }, [agent.status, loadData, selectedTodo, fetchTodoDiff])
 
   const allDone = todos.length > 0 && todos.every(t => t.status === TodoStatus.DONE || t.status === TodoStatus.SKIPPED)
-
-  // Derived: true when a run-all loop is active (optimistic OR confirmed by API)
-  const isRunAllInProgress = optimisticRunAll || (task?.run_all_in_progress ?? false)
 
   // Auto-select the RUNNING todo while run-all is in progress, unless the user
   // has already manually selected a RUNNING todo.
