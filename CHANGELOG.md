@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-04-07
+
+### Fixed
+- Electron: include `VERSION` file in packaged resources so `pip install` succeeds
+- Electron: repair broken Alembic migration chain (`1832bfac2bd1` → `acdf6dc8040f`)
+- Electron: replace `showErrorBox` with `showMessageBox` to prevent oversized error dialog
+- Electron: bundle Python for Windows and Linux (previously macOS only)
+- Electron: download only platform-specific Python runtime in CI
+- Electron: use `icon.png` for Windows build, fix ICO size requirement error
+- Electron: add author email and homepage for Linux `.deb` package metadata
+- CI: fix TypeScript `isRunAllInProgress` used-before-declaration error
+- Splash: redesign startup screen — fixed layout, cyan theme, smooth log panel
+
 ## [1.0.0] - 2026-04-07
 
 ### Added
