@@ -146,13 +146,28 @@ async def build_task_runner(db: AsyncSession, task_id: str, project_id: str):
 
 
 async def build_conversation_runner(db: AsyncSession, conv_id: str, project_id: str):
-    """Build a runner configured for a conversation context."""
+    """Build a runner configured for a conversation context.
+
+    Respects conversation-level runner_id if set, falling back to
+    project → global default via build_runner's standard resolution.
+    """
     from daiflow.config import get_conversation_dir, get_conversation_skills_dir
+    from daiflow.models import Conversation
     from daiflow.services.conversation_service import get_conversation_context
+    from daiflow.services.runner_service import build_runner_from_config, resolve_runner_config
 
     conv_dir = get_conversation_dir(conv_id)
     _, allowed_roots = await get_conversation_context(db, conv_id, project_id)
     skill_dir = str(get_conversation_skills_dir(conv_id))
+
+    # Check conversation-level runner override
+    conv = await db.get(Conversation, conv_id)
+    if conv and conv.runner_id:
+        from daiflow.models import RunnerConfig
+        rc = await db.get(RunnerConfig, conv.runner_id)
+        if rc:
+            return await build_runner_from_config(rc, db, str(conv_dir), allowed_roots, skill_dir)
+
     return await build_runner(
         db, str(conv_dir), allowed_roots, skill_dir,
         project_id=project_id,

@@ -20,7 +20,7 @@ class ConversationAgent(AgentConfig):
         return None
 
     def build_artifact_detector(self, ctx: AgentContext):
-        return make_file_write_detector("code_updated", None)
+        return make_file_write_detector(None, "code_updated")
 
     def chat_system_prefix(self, ctx: AgentContext) -> str | None:
         return (

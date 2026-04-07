@@ -27,7 +27,7 @@ async def _recover_interrupted_sessions():
     from datetime import datetime, timezone
     from sqlalchemy import select
     from daiflow.database import get_background_db
-    from daiflow.models import Session, SessionStatus, Todo, TodoStatus
+    from daiflow.models import Conversation, ConversationStatus, Session, SessionStatus, Todo, TodoStatus
     from daiflow.services.project_service import run_init_retry
     from daiflow.ws_manager import ws_manager
 
@@ -94,6 +94,17 @@ async def _recover_interrupted_sessions():
             stuck_count += 1
         if stuck_count:
             logger.info("Reset %d stuck RUNNING todo(s) to FAILED", stuck_count)
+
+        # Recover conversations stuck in CREATING (init was interrupted).
+        stuck_convs = await db.execute(
+            select(Conversation).where(Conversation.status == ConversationStatus.CREATING)
+        )
+        conv_count = 0
+        for conv in stuck_convs.scalars().all():
+            conv.status = ConversationStatus.FAILED
+            conv_count += 1
+        if conv_count:
+            logger.info("Reset %d stuck CREATING conversation(s) to FAILED", conv_count)
 
         await db.commit()
 

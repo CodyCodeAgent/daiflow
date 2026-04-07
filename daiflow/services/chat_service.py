@@ -10,7 +10,7 @@ from typing import Any, Callable
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from daiflow.exceptions import InvalidStateError, NotFoundError
-from daiflow.models import Conversation, ConversationStatus, Task, TaskStatus, Todo
+from daiflow.models import Conversation, ConversationStatus, Session, SessionStatus, Task, TaskStatus, Todo
 from daiflow.session_ids import conversation_chat, task_plan, task_review, task_spec, task_todo_exec, task_todo_split
 
 
@@ -66,6 +66,14 @@ async def prepare_stage_chat(
         if conv.status != ConversationStatus.READY:
             raise InvalidStateError("Conversation is not ready for chat")
         session_id = conversation_chat(entity_id)
+        # Ensure Session record exists for cody_session_id persistence
+        existing = await db.get(Session, session_id)
+        if not existing:
+            db.add(Session(
+                session_id=session_id, type="conversation",
+                ref_id=entity_id, status=SessionStatus.DONE,
+            ))
+            await db.commit()
         return await prepare_chat(db, "conversation", entity_id, session_id)
 
     if stage not in _STAGE_MAP:

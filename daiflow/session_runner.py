@@ -284,12 +284,19 @@ class SessionRunner:
 def _inject_file_context(file_paths: list[str], session_id: str) -> str:
     """Read files and prepend their contents as context for the prompt.
 
-    Resolves paths relative to the task directory derived from session_id.
+    Resolves paths relative to the entity directory derived from session_id.
+    Supports both task sessions (task:{id}:...) and conversation sessions (conversation:{id}:...).
     """
-    from daiflow.config import TASKS_DIR
+    from daiflow.config import CONVERSATIONS_DIR, TASKS_DIR
     parts = session_id.split(":")
-    task_id = parts[1] if len(parts) >= 2 else ""
-    task_dir = TASKS_DIR / task_id if task_id else None
+    entity_type = parts[0] if parts else ""
+    entity_id = parts[1] if len(parts) >= 2 else ""
+    if entity_type == "conversation" and entity_id:
+        task_dir = CONVERSATIONS_DIR / entity_id
+    elif entity_id:
+        task_dir = TASKS_DIR / entity_id
+    else:
+        task_dir = None
 
     context_parts: list[str] = []
     for rel_path in file_paths[:20]:
@@ -315,6 +322,20 @@ def _inject_image_references(image_paths: list[str]) -> str:
     """Build a prompt prefix referencing image files."""
     refs = [f"[Attached image: {p}]" for p in image_paths[:10]]
     return "\n".join(refs) + "\n\n"
+
+
+async def _persist_runner_session_id(session_id: str, runner_sid: str):
+    """Save runner_session_id to Session DB record for multi-turn chat continuity."""
+    try:
+        from daiflow.database import get_background_db
+        from daiflow.models import Session
+        async with get_background_db() as db:
+            session = await db.get(Session, session_id)
+            if session:
+                session.cody_session_id = runner_sid
+                await db.commit()
+    except Exception:
+        logger.debug("Failed to persist runner_session_id for %s", session_id, exc_info=True)
 
 
 async def run_stage_chat(
@@ -387,6 +408,10 @@ async def run_stage_chat(
                 await append_log(session_id, event)
 
                 if event["type"] == "done":
+                    # Persist runner_session_id for multi-turn continuity
+                    runner_sid = event.get("runner_session_id")
+                    if runner_sid:
+                        await _persist_runner_session_id(session_id, runner_sid)
                     yield {"type": "done"}
                     return
 

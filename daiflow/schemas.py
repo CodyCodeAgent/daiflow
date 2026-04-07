@@ -369,6 +369,14 @@ class ConversationCreate(BaseModel):
     description: str = ""
     runner_id: str | None = None
 
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("Conversation name cannot be empty")
+        return v
+
 
 class ConversationResponse(_ORMBase):
     id: str

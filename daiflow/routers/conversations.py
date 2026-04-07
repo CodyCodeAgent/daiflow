@@ -7,8 +7,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from daiflow.database import get_db
-from daiflow.models import Conversation, ConversationStatus, Session
-from daiflow.routers import get_conversation_or_404
+from daiflow.models import Conversation, ConversationStatus, Project, Session
+from daiflow.routers import get_conversation_or_404, get_project_or_404
 from daiflow.schemas import ConversationCreate, ConversationResponse
 from daiflow.services.conversation_service import delete_conversation_dir, init_conversation
 from daiflow.session_ids import conversation_init_fetch, conversation_init_skills
@@ -48,6 +48,9 @@ async def create_conversation(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
 ):
+    # Validate project exists
+    await get_project_or_404(db, data.project_id)
+
     conv = Conversation(
         name=data.name,
         project_id=data.project_id,
