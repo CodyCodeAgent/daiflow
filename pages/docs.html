@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>文档 — DaiFlow</title>
+  <meta name="description" content="DaiFlow 使用文档：快速开始、Runner 配置、五阶段工作流详解、架构说明。" />
+  <link rel="icon" type="image/png" href="./icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body class="docs-page">
+
+<!-- ══════════ NAV ══════════ -->
+<nav class="nav scrolled" id="nav">
+  <div class="nav-inner">
+    <a href="./index.html" class="nav-logo">
+      <img src="./icon.png" alt="DaiFlow" />
+      <span class="nav-logo-text">dai<span>flow</span></span>
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="./index.html#features">功能特性</a></li>
+      <li><a href="./index.html#workflow">工作流</a></li>
+      <li><a href="./index.html#runners">Runner</a></li>
+      <li><a href="./index.html#install">安装</a></li>
+      <li><a href="./docs.html" class="nav-cur">文档</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <a href="https://github.com/CodyCodeAgent/daiflow" class="btn btn-secondary btn-sm" target="_blank" rel="noopener">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/>
+        </svg>
+        GitHub
+      </a>
+      <button class="hamburger" id="hamburger" aria-label="打开菜单" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile nav panel -->
+<div id="nav-mobile-panel" class="nav-mobile-panel">
+  <a href="./index.html#features">功能特性</a>
+  <a href="./index.html#workflow">工作流</a>
+  <a href="./index.html#runners">Runner</a>
+  <a href="./index.html#install">安装</a>
+  <a href="./docs.html" class="nav-cur">文档</a>
+  <div class="nav-mobile-sep"></div>
+  <a href="https://github.com/CodyCodeAgent/daiflow" target="_blank" rel="noopener">★ GitHub</a>
+</div>
+
+<!-- ══════════ DOCS LAYOUT ══════════ -->
+<div class="docs-layout">
+
+  <!-- Sidebar -->
+  <aside class="docs-sidebar">
+    <div class="ds-section">
+      <span class="ds-label">入门</span>
+      <a href="#quickstart" class="ds-link active">
+        <span class="ds-link-icon">🚀</span> 快速开始
+      </a>
+      <a href="#requirements" class="ds-link ds-sub">
+        <span class="ds-link-icon">·</span> 环境要求
+      </a>
+      <a href="#install-steps" class="ds-link ds-sub">
+        <span class="ds-link-icon">·</span> 安装步骤
+      </a>
+      <a href="#first-run" class="ds-link ds-sub">
+        <span class="ds-link-icon">·</span> 首次配置
+      </a>
+    </div>
+
+    <div class="ds-section">
+      <span class="ds-label">配置</span>
+      <a href="#config" class="ds-link">
+        <span class="ds-link-icon">⚙️</span> 配置指南
+      </a>
+      <a href="#runners-config" class="ds-link ds-sub">
+        <span class="ds-link-icon">·</span> Runner 配置
+      </a>
+      <a href="#mcp" class="ds-link ds-sub">
+        <span class="ds-link-icon">·</span> MCP 服务器
+      </a>
+    </div>
+
+    <div class="ds-section">
+      <span class="ds-label">工作流</span>
+      <a href="#workflow" class="ds-link">
+        <span class="ds-link-icon">🔄</span> 工作流详解
+      </a>
+      <a href="#stage-init" class="ds-link ds-sub">
+        <span class="ds-link-icon">·</span> 任务初始化
+      </a>
+      <a href="#stage-plan" class="ds-link ds-sub">
+        <span class="ds-link-icon">·</span> 技术方案
+      </a>
+      <a href="#stage-todo" class="ds-link ds-sub">
+        <span class="ds-link-icon">·</span> 任务拆解
+      </a>
+      <a href="#stage-coding" class="ds-link ds-sub">
+        <span class="ds-link-icon">·</span> 编码实现
+      </a>
+      <a href="#stage-review" class="ds-link ds-sub">
+        <span class="ds-link-icon">·</span> 代码审查
+      </a>
+    </div>
+
+    <div class="ds-section">
+      <span class="ds-label">架构</span>
+      <a href="#architecture" class="ds-link">
+        <span class="ds-link-icon">🏗️</span> 架构说明
+      </a>
+      <a href="#session" class="ds-link ds-sub">
+        <span class="ds-link-icon">·</span> Session 架构
+      </a>
+      <a href="#state-machine" class="ds-link ds-sub">
+        <span class="ds-link-icon">·</span> 状态机
+      </a>
+      <a href="#api" class="ds-link">
+        <span class="ds-link-icon">📡</span> API 概览
+      </a>
+    </div>
+  </aside>
+
+  <!-- Content -->
+  <main class="docs-content">
+    <h1>DaiFlow 文档</h1>
+    <p class="doc-lead">
+      DaiFlow 是一个本地 AI 编程工作台，将从需求到 MR 的完整开发流程产品化。本文档帮助你快速上手并深入了解各项功能。
+    </p>
+
+    <!-- ─ 快速开始 ─ -->
+    <div class="doc-section" id="quickstart">
+      <h2><span class="doc-h2-num">1</span> 快速开始</h2>
+
+      <h3 id="requirements">环境要求</h3>
+      <table class="doc-table">
+        <thead>
+          <tr><th>依赖</th><th>最低版本</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>Python</code></td><td>3.11+</td><td>后端运行时</td></tr>
+          <tr><td><code>Node.js</code></td><td>18+</td><td>前端构建</td></tr>
+          <tr><td><code>Git</code></td><td>任意</td><td>仓库管理</td></tr>
+        </tbody>
+      </table>
+
+      <h3 id="install-steps">安装步骤</h3>
+
+      <div class="doc-code">
+        <div class="doc-code-bar">
+          <span>bash</span>
+          <button class="copy-btn">复制</button>
+        </div>
+        <pre><span class="cc"># 1. 克隆仓库</span>
+<span class="ck">git clone</span> <span class="cs">https://github.com/CodyCodeAgent/daiflow</span>
+<span class="ck">cd</span> daiflow
+
+<span class="cc"># 2. 创建并激活 Python 虚拟环境</span>
+<span class="ck">python</span> -m venv .venv
+<span class="ck">source</span> .venv/bin/activate  <span class="cc"># Windows: .venv\Scripts\activate</span>
+
+<span class="cc"># 3. 安装 Python 依赖</span>
+<span class="ck">pip install</span> -r requirements.txt
+<span class="ck">pip install</span> -e .
+
+<span class="cc"># 4. 构建前端</span>
+<span class="ck">cd</span> frontend && <span class="ck">npm install</span> && <span class="ck">npm run build</span> && <span class="ck">cd</span> ..
+
+<span class="cc"># 5. 启动（自动打开浏览器）</span>
+<span class="ck">daiflow start</span></pre>
+      </div>
+
+      <div class="doc-callout callout-tip">
+        💡 <strong>桌面端：</strong> 如果你希望使用桌面 App，安装 Electron 依赖后运行 <code class="inline-code">cd electron && npm install && npm run dev</code>。
+      </div>
+
+      <h3>开发模式</h3>
+      <p>开发时推荐分别启动前后端以获得热重载体验：</p>
+      <div class="doc-code">
+        <div class="doc-code-bar"><span>bash</span><button class="copy-btn">复制</button></div>
+        <pre><span class="cc"># 终端 1：后端（热重载）</span>
+<span class="ck">uvicorn</span> daiflow.main:app --reload --port 8000
+
+<span class="cc"># 终端 2：前端（HMR，代理到 :8000）</span>
+<span class="ck">cd</span> frontend && <span class="ck">npm run dev</span></pre>
+      </div>
+
+      <h3 id="first-run">首次配置</h3>
+      <div class="stage-steps">
+        <div class="stage-step">
+          <div class="ss-num">1</div>
+          <div class="ss-body">
+            <h4>进入 Settings 页面</h4>
+            <p>配置 AI 模型、Base URL 和 API Key。支持 Cody SDK、Claude Code 或 Cursor Runner。</p>
+          </div>
+        </div>
+        <div class="stage-step">
+          <div class="ss-num">2</div>
+          <div class="ss-body">
+            <h4>创建项目</h4>
+            <p>添加项目名称和描述，关联一个或多个本地 Git 仓库（可指定前端/后端/自定义类型）。</p>
+          </div>
+        </div>
+        <div class="stage-step">
+          <div class="ss-num">3</div>
+          <div class="ss-body">
+            <h4>等待知识库生成</h4>
+            <p>系统对每个仓库并发生成四层项目知识（结构、业务流、模块、索引），完成后进入 READY 状态。</p>
+          </div>
+        </div>
+        <div class="stage-step">
+          <div class="ss-num">4</div>
+          <div class="ss-body">
+            <h4>创建任务，进入 DevFlow</h4>
+            <p>填写任务描述（可附 PRD 文档链接、图片），选择 Runner，然后进入五阶段工作流。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─ 配置 ─ -->
+    <div class="doc-section" id="config">
+      <h2><span class="doc-h2-num">2</span> 配置指南</h2>
+
+      <h3 id="runners-config">Runner 配置</h3>
+      <p>DaiFlow 支持三种 AI 执行后端，通过 <strong>Settings → Runner Configs</strong> 进行管理，支持三级解析策略：</p>
+      <table class="doc-table">
+        <thead><tr><th>优先级</th><th>作用范围</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>1（最高）</td><td>任务级</td><td>创建任务时手动指定 Runner</td></tr>
+          <tr><td>2</td><td>项目级</td><td>项目设置中的默认 Runner</td></tr>
+          <tr><td>3（最低）</td><td>全局</td><td>Settings 中配置的全局默认</td></tr>
+        </tbody>
+      </table>
+
+      <div class="doc-callout callout-info">
+        📌 推荐使用 <strong>Cody SDK</strong> 作为默认 Runner（进程内执行，延迟最低）。安装方式：<code class="inline-code">pip install cody-ai</code>
+      </div>
+
+      <h3>环境变量</h3>
+      <table class="doc-table">
+        <thead><tr><th>变量名</th><th>默认值</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td><code>DAIFLOW_HOME</code></td><td><code>~/.daiflow/</code></td><td>数据目录，存储 DB、Session 日志、项目知识</td></tr>
+          <tr><td><code>DAIFLOW_LOG_RETENTION_DAYS</code></td><td><code>30</code></td><td>Session 日志清理阈值（天）</td></tr>
+          <tr><td><code>DAIFLOW_CORS_ORIGINS</code></td><td>localhost:3000/8000</td><td>允许的 CORS 来源（逗号分隔）</td></tr>
+        </tbody>
+      </table>
+
+      <h3 id="mcp">MCP 服务器</h3>
+      <p>DaiFlow 支持 Model Context Protocol (MCP) 服务器集成。在 <strong>MCP 管理</strong> 页面添加服务器后，AI 执行时可自动调用 MCP 工具扩展能力。</p>
+      <div class="doc-code">
+        <div class="doc-code-bar"><span>示例配置</span></div>
+        <pre>{
+  "name": "my-mcp-server",
+  "command": "node",
+  "args": ["/path/to/server.js"],
+  "env": { "API_KEY": "..." },
+  "enabled": true
+}</pre>
+      </div>
+    </div>
+
+    <!-- ─ 工作流 ─ -->
+    <div class="doc-section" id="workflow">
+      <h2><span class="doc-h2-num">3</span> 五阶段 DevFlow</h2>
+      <p>DaiFlow 的核心是五阶段工作流，每个阶段都有对应的任务状态，通过状态机严格管控流转，防止跳跃和逆序操作。</p>
+
+      <div id="stage-init">
+        <h3>🚀 阶段 01 — 任务初始化</h3>
+        <p>系统自动执行以下操作（可重试）：</p>
+        <ul>
+          <li>将项目仓库复制到任务工作目录（<code class="inline-code">~/.daiflow/tasks/{task_id}/</code>）</li>
+          <li>检出指定分支，建立独立工作空间</li>
+          <li>同步技能库（Skill 文件），供 AI 读取项目规范</li>
+          <li>复制项目知识索引（<code class="inline-code">project.md</code> + <code class="inline-code">constitution.md</code>）</li>
+        </ul>
+        <p>初始化完成后需用户手动确认，进入方案阶段。</p>
+      </div>
+
+      <div id="stage-plan">
+        <h3>📐 阶段 02 — 技术方案</h3>
+        <p>AI 基于任务描述、PRD 文档与项目知识生成结构化技术方案：</p>
+        <ul>
+          <li>支持附上 PRD 图片和文档链接作为输入</li>
+          <li>方案以 Markdown 格式呈现，支持多轮对话细化</li>
+          <li>方案持久化到 <code class="inline-code">plan.md</code>，用户确认后锁定</li>
+          <li>锁定自动触发 AI 任务拆解（Todo 生成）</li>
+        </ul>
+      </div>
+
+      <div id="stage-todo">
+        <h3>📋 阶段 03 — 任务拆解</h3>
+        <p>AI 复用方案阶段的 Session（保持上下文），将技术方案拆解为有序 Todo 列表：</p>
+        <ul>
+          <li>每个 Todo 包含：标题、详细描述、预期输出</li>
+          <li>待办列表持久化到 <code class="inline-code">todo.json</code></li>
+          <li>支持与 AI 对话调整 Todo 列表</li>
+          <li>用户确认后进入编码阶段</li>
+        </ul>
+      </div>
+
+      <div id="stage-coding">
+        <h3>💻 阶段 04 — 编码实现</h3>
+        <p>每个 Todo 使用独立 AI Session 执行：</p>
+        <ul>
+          <li>顺序执行，前一个 Todo 完成后才能执行下一个</li>
+          <li>实时 Diff 展示，可查看每一步的代码变更</li>
+          <li>支持跳过（Skip）和批量执行（Run All）</li>
+          <li>失败后可重试，状态机保障一致性</li>
+        </ul>
+        <div class="doc-callout callout-warn">
+          ⚠️ 编码阶段的 AI 修改直接作用于任务工作目录，请在审查阶段仔细检查 Diff 后再提交。
+        </div>
+      </div>
+
+      <div id="stage-review">
+        <h3>🔍 阶段 05 — 代码审查</h3>
+        <p>汇总所有 Todo 产生的 Diff，进行最终审查：</p>
+        <ul>
+          <li>展示全量代码变更（多仓库支持）</li>
+          <li>AI 自动生成 Commit Message，支持对话调整</li>
+          <li>一键提交并推送 MR 到 Git 远程仓库</li>
+          <li>支持与 AI 对话进行代码审查讨论</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ─ 架构 ─ -->
+    <div class="doc-section" id="architecture">
+      <h2><span class="doc-h2-num">4</span> 架构说明</h2>
+
+      <p>DaiFlow 采用分层架构，前端通过 HTTP REST + WebSocket 与 FastAPI 后端通信，AI 执行通过可插拔 Runner 完成。</p>
+
+      <div class="doc-code">
+        <div class="doc-code-bar"><span>架构图</span></div>
+        <pre>┌─────────────────────────────────────────┐
+│  Electron Shell（桌面端，可选）           │
+│  进程托管 / venv 管理 / 动态端口分配       │
+└──────────────────┬──────────────────────┘
+                   │
+┌──────────────────┴──────────────────────┐
+│  React SPA（Vite 6 + TypeScript）        │
+│  WebSocket 订阅频道 / REST API 调用       │
+└──────────────────┬──────────────────────┘
+                   │ HTTP REST + WebSocket
+┌──────────────────┴──────────────────────┐
+│  FastAPI（async Python 3.11+）           │
+│  Routers → Services → Workflow          │
+├────────────────┬────────────────────────┤
+│  Runner 后端   │  SQLite (ORM + Alembic) │
+│  Cody / Claude │  JSONL Session 日志     │
+│  Code / Cursor │  ~/.daiflow/ 本地存储   │
+└────────────────┴────────────────────────┘</pre>
+      </div>
+
+      <h3 id="session">Session 架构</h3>
+      <p>所有 AI 交互共享统一执行模式：</p>
+      <ul>
+        <li><strong>SessionRunner</strong>：执行 Runner → 写日志到 <code class="inline-code">.jsonl</code> → 更新 DB 状态 → 通过 WSManager 广播</li>
+        <li><strong>三个数据接口</strong>覆盖所有场景：DB 状态快照 / JSONL 日志回放 / WebSocket 实时推送</li>
+        <li><strong>WebSocket 协议</strong>：单连接多路复用，客户端订阅频道（<code class="inline-code">session:{session_id}</code>）接收事件</li>
+      </ul>
+
+      <h3 id="state-machine">状态机</h3>
+      <p>任务和 Todo 状态通过 <code class="inline-code">transitions</code> 库（AsyncMachine）管控，禁止直接修改状态字段：</p>
+      <table class="doc-table">
+        <thead><tr><th>状态</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td><code>CREATED</code></td><td>任务已创建，等待初始化</td></tr>
+          <tr><td><code>INITIALIZING</code></td><td>正在拉取代码、同步技能库</td></tr>
+          <tr><td><code>PLANNING</code></td><td>AI 生成技术方案中</td></tr>
+          <tr><td><code>PLAN_LOCKED</code></td><td>方案已锁定，正在拆解 Todo</td></tr>
+          <tr><td><code>TODO_READY</code></td><td>Todo 就绪，等待用户确认开始编码</td></tr>
+          <tr><td><code>CODING</code></td><td>逐条执行 Todo 编码中</td></tr>
+          <tr><td><code>REVIEWING</code></td><td>代码审查阶段</td></tr>
+          <tr><td><code>DONE</code></td><td>任务完成，MR 已提交</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ─ API ─ -->
+    <div class="doc-section" id="api">
+      <h2><span class="doc-h2-num">5</span> API 概览</h2>
+      <p>后端服务运行在 <code class="inline-code">http://localhost:8000</code>，提供以下 REST API：</p>
+
+      <table class="doc-table">
+        <thead><tr><th>分类</th><th>端点</th></tr></thead>
+        <tbody>
+          <tr><td>设置</td><td><code>GET/PUT /api/settings</code>，<code>GET /api/settings/check</code></td></tr>
+          <tr><td>项目</td><td><code>CRUD /api/projects</code>，<code>POST .../init</code>，<code>GET .../knowledge</code></td></tr>
+          <tr><td>任务</td><td><code>CRUD /api/tasks</code>，<code>POST .../lock-plan</code>，<code>POST .../start-coding</code></td></tr>
+          <tr><td>DevFlow</td><td><code>POST /api/tasks/{id}/plan</code>，<code>POST .../todo</code>，<code>POST /api/todos/{id}/execute</code></td></tr>
+          <tr><td>Session</td><td><code>GET /api/sessions/{id}/status</code>，<code>GET .../logs</code></td></tr>
+          <tr><td>WebSocket</td><td><code>WS /api/ws</code>（subscribe / chat / ping）</td></tr>
+          <tr><td>审查</td><td><code>GET /api/tasks/{id}/diff</code>，<code>POST .../submit-mr</code></td></tr>
+          <tr><td>技能</td><td><code>CRUD /api/skills</code>，<code>POST .../link</code></td></tr>
+          <tr><td>对话</td><td><code>CRUD /api/conversations</code>，<code>POST .../init</code></td></tr>
+        </tbody>
+      </table>
+
+      <div class="doc-callout callout-info">
+        📖 完整 API 文档请访问 <a href="http://localhost:8000/docs" target="_blank" rel="noopener"><code class="inline-code">http://localhost:8000/docs</code></a>（服务启动后自动生成 Swagger UI）。
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══════════ FOOTER ══════════ -->
+<footer style="margin-top: 0;">
+  <div class="container">
+    <div class="footer-bottom" style="border-top: 1px solid var(--border); padding-top: 28px;">
+      <span>© 2026 DaiFlow. Released under the <a href="https://github.com/CodyCodeAgent/daiflow/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>.</span>
+      <div style="display: flex; gap: 20px;">
+        <a href="./index.html">首页</a>
+        <a href="https://github.com/CodyCodeAgent/daiflow" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/CodyCodeAgent/daiflow/issues" target="_blank" rel="noopener">反馈</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="./script.js"></script>
+</body>
+</html>
