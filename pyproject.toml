@@ -5,8 +5,31 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "daiflow"
 dynamic = ["version"]
-description = "AI-powered programming workbench"
+description = "Local AI-powered programming workbench — requirement to MR in one workflow"
+readme = "README.md"
+license = {text = "MIT"}
 requires-python = ">=3.11"
+authors = [
+  {name = "DaiFlow Contributors"},
+]
+keywords = ["ai", "developer-tools", "code-generation", "workflow", "llm"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Code Generators",
+  "Topic :: Software Development :: Libraries :: Application Frameworks",
+]
+
+[project.urls]
+Homepage = "https://github.com/CodyCodeAgent/daiflow"
+Repository = "https://github.com/CodyCodeAgent/daiflow"
+Issues = "https://github.com/CodyCodeAgent/daiflow/issues"
+Changelog = "https://github.com/CodyCodeAgent/daiflow/blob/main/CHANGELOG.md"
+
 dependencies = [
     "fastapi>=0.110.0",
     "uvicorn[standard]>=0.29.0",

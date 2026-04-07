@@ -1,0 +1,15 @@
+services:
+  daiflow:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - daiflow_data:/root/.daiflow
+    environment:
+      - DAIFLOW_HOME=/root/.daiflow
+      # Override with your actual values:
+      # - DAIFLOW_CORS_ORIGINS=http://yourdomain.com
+    restart: unless-stopped
+
+volumes:
+  daiflow_data:

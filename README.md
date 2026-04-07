@@ -350,4 +350,4 @@ alembic upgrade head
 
 ## License
 
-Private
+[MIT](LICENSE)
