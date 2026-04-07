@@ -20,7 +20,11 @@
     "dist:win": "electron-builder --win",
     "dist:linux": "electron-builder --linux"
   },
-  "author": "DaiFlow",
+  "author": {
+    "name": "DaiFlow Contributors",
+    "email": "hi@daiflow.dev"
+  },
+  "homepage": "https://github.com/CodyCodeAgent/daiflow",
   "license": "MIT",
   "devDependencies": {
     "electron": "^33.0.0",
