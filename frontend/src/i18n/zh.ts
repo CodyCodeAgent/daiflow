@@ -8,6 +8,7 @@ const zh: Record<TranslationKey, string> = {
   'nav.settings': '设置',
   'nav.skills': '技能',
   'nav.mcp': 'MCP',
+  'nav.conversations': '对话',
   'nav.debug': '排障',
   'nav.not_configured': '未配置',
 
@@ -472,6 +473,29 @@ const zh: Record<TranslationKey, string> = {
   'skills.back_to_projects': '项目',
   'skills.showing_project': '当前项目技能',
   'skills.show_all': '显示全部',
+
+  // Conversations
+  'conversations.title': '对话',
+  'conversations.new': '+ 新建对话',
+  'conversations.empty': '暂无对话。创建一个开始讨论项目吧。',
+  'conversations.delete_confirm': '确定删除此对话？',
+  'conversations.name': '对话名称',
+  'conversations.name_placeholder': '例如：讨论 API 重构',
+  'conversations.project': '项目',
+  'conversations.select_project': '选择项目...',
+  'conversations.description': '描述',
+  'conversations.desc_placeholder': '讨论内容...',
+  'conversations.create': '创建',
+  'conversations.creating': '创建中...',
+  'conversations.cancel': '取消',
+  'conversations.status.0': '初始化中',
+  'conversations.status.1': '就绪',
+  'conversations.status.2': '失败',
+  'conversations.chat_title': '项目对话',
+  'conversations.initializing': '正在准备对话环境...',
+  'conversations.init_failed': '初始化失败。',
+  'conversations.retry': '重试',
+  'conversations.back': '返回对话列表',
 
   // Toast
   'toast.operation_failed': '操作失败',

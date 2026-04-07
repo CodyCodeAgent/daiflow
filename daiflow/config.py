@@ -8,6 +8,7 @@ SESSIONS_DIR = DAIFLOW_HOME / "sessions"
 CODY_DB_PATH = DAIFLOW_HOME / "cody_sessions.db"
 PROJECTS_DIR = DAIFLOW_HOME / "projects"
 TASKS_DIR = DAIFLOW_HOME / "tasks"
+CONVERSATIONS_DIR = DAIFLOW_HOME / "conversations"
 
 DATABASE_URL = f"sqlite+aiosqlite:///{DB_PATH}"
 
@@ -32,6 +33,16 @@ def get_task_dir(task_id: str) -> Path:
 
 def get_task_skills_dir(task_id: str) -> Path:
     return TASKS_DIR / task_id / ".cody" / "skills"
+
+
+def get_conversation_dir(conversation_id: str) -> Path:
+    d = CONVERSATIONS_DIR / conversation_id
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def get_conversation_skills_dir(conversation_id: str) -> Path:
+    return CONVERSATIONS_DIR / conversation_id / ".cody" / "skills"
 
 # Tool names that indicate file writes (used by on_tool_result detection)
 FILE_WRITE_TOOLS = frozenset({"write_file", "edit_file", "create_file"})
@@ -66,7 +77,7 @@ LOG_RETENTION_DAYS = int(os.environ.get("DAIFLOW_LOG_RETENTION_DAYS", "30"))
 
 def init_daiflow_dir():
     """Create the ~/.daiflow/ directory structure if it doesn't exist."""
-    for d in [DAIFLOW_HOME, SESSIONS_DIR, PROJECTS_DIR, TASKS_DIR]:
+    for d in [DAIFLOW_HOME, SESSIONS_DIR, PROJECTS_DIR, TASKS_DIR, CONVERSATIONS_DIR]:
         d.mkdir(parents=True, exist_ok=True)
 
 

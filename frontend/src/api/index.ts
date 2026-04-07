@@ -358,6 +358,31 @@ export const testMcpServer = (data: { url: string; headers?: Record<string, stri
     '/settings/mcp-servers/test', { method: 'POST', body: JSON.stringify(data) }
   )
 
+// ── Conversations ──
+export interface ConversationData {
+  id: string
+  name: string
+  project_id: string
+  description: string
+  status: number
+  runner_id: string | null
+  created_at: string | null
+  updated_at: string | null
+}
+
+export const listConversations = (projectId?: string) =>
+  request<ConversationData[]>(`/conversations${projectId ? `?project_id=${projectId}` : ''}`)
+export const getConversation = (id: string) =>
+  request<ConversationData>(`/conversations/${id}`)
+export const createConversation = (data: { name: string; project_id: string; description?: string; runner_id?: string | null }) =>
+  request<ConversationData>('/conversations', { method: 'POST', body: JSON.stringify(data) })
+export const deleteConversation = (id: string) =>
+  request<{ ok: boolean }>(`/conversations/${id}`, { method: 'DELETE' })
+export const retryConversationInit = (id: string) =>
+  request<{ ok: boolean }>(`/conversations/${id}/retry-init`, { method: 'POST' })
+export const getConversationInitSessions = (convId: string) =>
+  request<{ session_id: string; type: string; status: number; error: string | null }[]>(`/conversations/${convId}/init/sessions`)
+
 // ── Task Files (for @ mention) ──
 export const listTaskFiles = (taskId: string, prefix = '') =>
   request<{ files: string[] }>(`/tasks/${taskId}/files?prefix=${encodeURIComponent(prefix)}&limit=30`)

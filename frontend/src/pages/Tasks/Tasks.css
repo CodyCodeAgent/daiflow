@@ -54,55 +54,7 @@
 .pip.done { background: var(--teal); }
 .pip.active { background: var(--blue); box-shadow: 0 0 6px var(--blue); }
 
-/* Drawer */
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.5);
-  z-index: 998;
-}
-
-.drawer {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 520px;
-  height: 100vh;
-  background: var(--bg-1);
-  border-left: 1px solid var(--border);
-  z-index: 999;
-  display: flex;
-  flex-direction: column;
-  animation: slideIn .2s ease;
-}
-
-@keyframes slideIn {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
-}
-
-.drawer-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 18px 24px;
-  border-bottom: 1px solid var(--border);
-}
-
-.drawer-title { font-size: 16px; font-weight: 700; }
-.drawer-close { background: none; border: none; color: var(--t2); font-size: 20px; cursor: pointer; }
-
-.drawer-body { flex: 1; overflow-y: auto; padding: 24px 32px; }
-
-.drawer-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 24px;
-  border-top: 1px solid var(--border);
-  min-height: 60px;
-}
-
+/* Drawer (base styles in global.css) */
 .footer-left { font-size: 12px; color: var(--t3); line-height: 1.5; }
 
 /* Step indicator */

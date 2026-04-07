@@ -63,6 +63,7 @@ async def client(db_engine):
         "daiflow.database",
         "daiflow.services.task_service",
         "daiflow.services.project_service",
+        "daiflow.services.conversation_service",
         "daiflow.services.repo_monitor",
         "daiflow.workflow.pipeline",
     ]

@@ -7,4 +7,6 @@ export const sessionIds = {
   todoExec: (taskId: string, todoId: string) => `task:${taskId}:todo:${todoId}`,
   review: (taskId: string) => `task:${taskId}:review`,
   taskInitBus: (taskId: string) => `task:init:${taskId}`,
+  conversationChat: (convId: string) => `conversation:${convId}:chat`,
+  conversationInitBus: (convId: string) => `conversation:init:${convId}`,
 }

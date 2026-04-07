@@ -12,6 +12,8 @@ import PlanStage from './pages/DevFlow/PlanStage/PlanStage'
 import TodoStage from './pages/DevFlow/TodoStage/TodoStage'
 import CodingStage from './pages/DevFlow/CodingStage/CodingStage'
 import ReviewStage from './pages/DevFlow/ReviewStage/ReviewStage'
+import Conversations from './pages/Conversations/Conversations'
+import ConversationChat from './pages/Conversations/ConversationChat'
 import Debug from './pages/Debug/Debug'
 import McpServers from './pages/McpServers/McpServers'
 import Skills from './pages/Skills/Skills'
@@ -90,6 +92,8 @@ export default function App() {
             <Route path="/devflow/:taskId/todo" element={<SettingsGuard><StageErrorBoundary><DevFlowGuard stagePath="todo"><TodoStage /></DevFlowGuard></StageErrorBoundary></SettingsGuard>} />
             <Route path="/devflow/:taskId/coding" element={<SettingsGuard><StageErrorBoundary><DevFlowGuard stagePath="coding"><CodingStage /></DevFlowGuard></StageErrorBoundary></SettingsGuard>} />
             <Route path="/devflow/:taskId/review" element={<SettingsGuard><StageErrorBoundary><DevFlowGuard stagePath="review"><ReviewStage /></DevFlowGuard></StageErrorBoundary></SettingsGuard>} />
+            <Route path="/conversations" element={<SettingsGuard><Conversations /></SettingsGuard>} />
+            <Route path="/conversations/:conversationId" element={<SettingsGuard><ConversationChat /></SettingsGuard>} />
             <Route path="/skills" element={<SettingsGuard><Skills /></SettingsGuard>} />
             <Route path="/mcp" element={<SettingsGuard><McpServers /></SettingsGuard>} />
             <Route path="/debug" element={<SettingsGuard><Debug /></SettingsGuard>} />

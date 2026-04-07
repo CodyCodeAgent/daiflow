@@ -6,6 +6,7 @@ const en = {
   'nav.settings': 'Settings',
   'nav.skills': 'Skills',
   'nav.mcp': 'MCP',
+  'nav.conversations': 'Conversations',
   'nav.debug': 'Debug',
   'nav.not_configured': 'not configured',
 
@@ -470,6 +471,29 @@ const en = {
   'skills.back_to_projects': 'Projects',
   'skills.showing_project': 'Showing skills for project',
   'skills.show_all': 'Show All',
+
+  // Conversations
+  'conversations.title': 'Conversations',
+  'conversations.new': '+ New Conversation',
+  'conversations.empty': 'No conversations yet. Create one to start chatting about a project.',
+  'conversations.delete_confirm': 'Delete this conversation?',
+  'conversations.name': 'Conversation Name',
+  'conversations.name_placeholder': 'e.g. Discuss API refactoring',
+  'conversations.project': 'Project',
+  'conversations.select_project': 'Select project...',
+  'conversations.description': 'Description',
+  'conversations.desc_placeholder': 'What to discuss...',
+  'conversations.create': 'Create',
+  'conversations.creating': 'Creating...',
+  'conversations.cancel': 'Cancel',
+  'conversations.status.0': 'Initializing',
+  'conversations.status.1': 'Ready',
+  'conversations.status.2': 'Failed',
+  'conversations.chat_title': 'Project Chat',
+  'conversations.initializing': 'Setting up conversation environment...',
+  'conversations.init_failed': 'Initialization failed.',
+  'conversations.retry': 'Retry',
+  'conversations.back': 'Back to Conversations',
 
   // Toast
   'toast.operation_failed': 'Operation failed',

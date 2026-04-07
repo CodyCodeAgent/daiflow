@@ -11,9 +11,9 @@ from sqlalchemy import update
 
 from daiflow.agents import AgentConfig, AgentContext, get_agent_config
 from daiflow.models import Session, SessionStatus, Task, Todo
-from daiflow.services.cody_service import build_task_runner
+from daiflow.services.cody_service import build_task_runner, build_conversation_runner
 from daiflow.services.settings_service import get_language_setting
-from daiflow.config import get_task_dir
+from daiflow.config import get_task_dir, get_conversation_dir
 from daiflow.services.task_service import get_task_context
 from daiflow.session_runner import SessionRunner
 
@@ -43,7 +43,17 @@ async def _build_context(
     """Build AgentContext by loading task/todo from DB and resolving paths."""
     ctx = AgentContext(db=db, session_id="", entity_id=entity_id)
 
-    if agent_type == "todo_exec":
+    if agent_type == "conversation":
+        # entity_id is conversation_id
+        from daiflow.models import Conversation
+        from daiflow.services.conversation_service import get_conversation_context
+        conv = await db.get(Conversation, entity_id)
+        if not conv:
+            raise ValueError(f"Conversation {entity_id} not found")
+        ctx.project_id = conv.project_id
+        ctx.task_dir = str(get_conversation_dir(entity_id))
+        _, ctx.allowed_roots = await get_conversation_context(db, entity_id, conv.project_id)
+    elif agent_type == "todo_exec":
         # entity_id is todo_id
         todo = await db.get(Todo, entity_id)
         if not todo:
@@ -179,7 +189,10 @@ async def prepare_chat(
     ctx.session_id = session_id
 
     # Build runner (honours task/project/global runner config)
-    agent_runner = await build_task_runner(db, ctx.task.id, ctx.project_id)
+    if agent_type == "conversation":
+        agent_runner = await build_conversation_runner(db, entity_id, ctx.project_id)
+    else:
+        agent_runner = await build_task_runner(db, ctx.task.id, ctx.project_id)
 
     # Resolve cody_session_id for runner session reuse (multi-turn chat)
     cody_session_id = await config.resolve_cody_session_id(ctx)

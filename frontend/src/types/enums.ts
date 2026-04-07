@@ -19,6 +19,12 @@ export const TodoStatus = {
   SKIPPED: 4,
 } as const
 
+export const ConversationStatus = {
+  CREATING: 0,
+  READY: 1,
+  FAILED: 2,
+} as const
+
 export const SessionStatus = {
   WAITING: 0,
   RUNNING: 1,

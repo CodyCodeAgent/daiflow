@@ -24,7 +24,6 @@ class TestProjectsCRUD:
             "repos": [
                 {"git_url": "https://github.com/test/repo", "local_path": "/tmp/repo", "repo_type": "backend"}
             ],
-            "skill_names": ["python", "fastapi"],
         })
         assert resp.status_code == 200
         data = resp.json()
@@ -32,7 +31,6 @@ class TestProjectsCRUD:
         assert data["description"] == "A test project"
         assert len(data["repos"]) == 1
         assert data["repos"][0]["repo_type"] == "backend"
-        assert data["skill_names"] == ["python", "fastapi"]
         assert data["id"]  # Should have an auto-generated ID
 
     async def test_get_project(self, client):

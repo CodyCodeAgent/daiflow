@@ -288,3 +288,28 @@ async def sync_skills_to_task(db: AsyncSession, project_id: str, task_id: str) -
         (task_dir / "project.md").write_text(project_summary.content, encoding="utf-8")
 
     return len(skills)
+
+
+async def sync_skills_to_dir(db: AsyncSession, project_id: str, skills_dir) -> int:
+    """Write project skills as SKILL.md files to an arbitrary directory.
+
+    Used by conversations (and anything else that needs project skills without
+    task-specific extras). Returns the number of skills written.
+    """
+    from pathlib import Path
+    skills_dir = Path(skills_dir)
+
+    skills = await get_project_skills(db, project_id)
+    if not skills:
+        return 0
+
+    if skills_dir.exists():
+        shutil.rmtree(skills_dir)
+    skills_dir.mkdir(parents=True, exist_ok=True)
+
+    for skill in skills:
+        skill_subdir = skills_dir / skill.name
+        skill_subdir.mkdir(parents=True, exist_ok=True)
+        (skill_subdir / "SKILL.md").write_text(assemble_skill_md(skill), encoding="utf-8")
+
+    return len(skills)

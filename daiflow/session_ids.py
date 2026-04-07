@@ -41,6 +41,22 @@ def task_spec(task_id: str) -> str:
     return f"task:{task_id}:spec"
 
 
+def conversation_chat(conversation_id: str) -> str:
+    return f"conversation:{conversation_id}:chat"
+
+
+def conversation_init_fetch(conversation_id: str) -> str:
+    return f"conversation:{conversation_id}:init:fetch_code"
+
+
+def conversation_init_skills(conversation_id: str) -> str:
+    return f"conversation:{conversation_id}:init:sync_skills"
+
+
+def conversation_init_bus(conversation_id: str) -> str:
+    return f"conversation:init:{conversation_id}"
+
+
 def project_init(project_id: str, knowledge_type: str) -> str:
     return f"init:{project_id}:{knowledge_type}"
 

@@ -1,0 +1,97 @@
+/* ── Conversation List ── */
+
+.conv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.conv-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.conv-row:hover {
+  border-color: var(--border-hi);
+  background: var(--bg-3);
+}
+
+.conv-name {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.conv-info {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.conv-project {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--t2);
+  background: var(--bg-3);
+  padding: 1px 8px;
+  border-radius: 4px;
+}
+
+.conv-desc {
+  font-size: 11px;
+  color: var(--t3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 300px;
+}
+
+.conv-time {
+  font-size: 11px;
+  color: var(--t3);
+}
+
+.conv-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── Empty State ── */
+
+.conv-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--t3);
+}
+
+.conv-empty-icon {
+  font-size: 36px;
+  margin-bottom: 12px;
+  opacity: 0.4;
+}
+
+.conv-empty p {
+  font-size: 13px;
+}
+
+/* ── Drawer (reuses Tasks drawer pattern) ── */
+
+.conv-drawer {
+  width: 440px;
+}
+
+.conv-drawer .field {
+  margin-bottom: 20px;
+}
+
+.conv-drawer .field:last-child {
+  margin-bottom: 0;
+}

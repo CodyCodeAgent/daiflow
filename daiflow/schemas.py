@@ -360,6 +360,49 @@ class DefaultRunnerUpdate(BaseModel):
 # ── Skill Center ──
 
 
+# ── Conversations ──
+
+
+class ConversationCreate(BaseModel):
+    name: str
+    project_id: str
+    description: str = ""
+    runner_id: str | None = None
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("Conversation name cannot be empty")
+        if len(v) > 200:
+            raise ValueError("Conversation name too long (max 200 chars)")
+        return v
+
+    @field_validator("description")
+    @classmethod
+    def validate_description(cls, v: str) -> str:
+        if len(v) > 2000:
+            raise ValueError("Description too long (max 2000 chars)")
+        return v
+
+
+class ConversationResponse(_ORMBase):
+    id: str
+    name: str
+    project_id: str
+    description: str
+    status: int
+    runner_id: str | None = None
+    created_at: str | None = None
+    updated_at: str | None = None
+
+    @field_validator("created_at", "updated_at", mode="before")
+    @classmethod
+    def serialize_datetime(cls, v):
+        return _serialize_dt(v)
+
+
 class SkillCreate(BaseModel):
     source_type: Literal["project", "manual", "external"] = "manual"
     source_id: str = "0"
