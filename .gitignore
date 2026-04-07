@@ -31,6 +31,12 @@ Thumbs.db
 .env
 .env.*
 
+# Claude Code local settings
+.claude/
+
+# uv lock file (project uses pip)
+uv.lock
+
 # Database
 *.db
 *.sqlite
