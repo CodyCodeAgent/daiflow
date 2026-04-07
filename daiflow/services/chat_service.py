@@ -71,7 +71,7 @@ async def prepare_stage_chat(
         if not existing:
             db.add(Session(
                 session_id=session_id, type="conversation",
-                ref_id=entity_id, status=SessionStatus.DONE,
+                ref_id=entity_id, status=SessionStatus.WAITING,
             ))
             await db.commit()
         return await prepare_chat(db, "conversation", entity_id, session_id)

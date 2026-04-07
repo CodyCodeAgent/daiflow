@@ -167,6 +167,7 @@ async def build_conversation_runner(db: AsyncSession, conv_id: str, project_id: 
         rc = await db.get(RunnerConfig, conv.runner_id)
         if rc:
             return await build_runner_from_config(rc, db, str(conv_dir), allowed_roots, skill_dir)
+        logger.warning("Conversation %s references deleted runner %s, falling back", conv_id, conv.runner_id)
 
     return await build_runner(
         db, str(conv_dir), allowed_roots, skill_dir,

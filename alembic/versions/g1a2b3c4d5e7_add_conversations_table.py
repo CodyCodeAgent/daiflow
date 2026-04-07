@@ -23,7 +23,7 @@ def upgrade() -> None:
         sa.Column('id', sa.String(), nullable=False),
         sa.Column('name', sa.String(), nullable=False),
         sa.Column('project_id', sa.String(), nullable=False),
-        sa.Column('description', sa.Text(), nullable=True),
+        sa.Column('description', sa.Text(), server_default=''),
         sa.Column('status', sa.Integer(), server_default='0'),
         sa.Column('runner_id', sa.String(), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=True),
