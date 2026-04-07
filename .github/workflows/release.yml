@@ -26,7 +26,7 @@ jobs:
         run: cd electron && npm ci
 
       - name: Download bundled Python runtimes
-        run: bash electron/scripts/download-python.sh
+        run: bash electron/scripts/download-python.sh mac
 
       - name: Build frontend
         run: cd frontend && npm ci && npm run build
@@ -64,7 +64,7 @@ jobs:
 
       - name: Download bundled Python runtime
         shell: bash
-        run: bash electron/scripts/download-python.sh
+        run: bash electron/scripts/download-python.sh win
 
       - name: Package (Windows)
         run: cd electron && npx electron-builder --win --publish never
@@ -96,7 +96,7 @@ jobs:
         run: cd frontend && npm ci && npm run build
 
       - name: Download bundled Python runtime
-        run: bash electron/scripts/download-python.sh
+        run: bash electron/scripts/download-python.sh linux
 
       - name: Package (Linux)
         run: cd electron && npx electron-builder --linux --publish never
