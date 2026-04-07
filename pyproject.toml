@@ -24,12 +24,6 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Application Frameworks",
 ]
 
-[project.urls]
-Homepage = "https://github.com/CodyCodeAgent/daiflow"
-Repository = "https://github.com/CodyCodeAgent/daiflow"
-Issues = "https://github.com/CodyCodeAgent/daiflow/issues"
-Changelog = "https://github.com/CodyCodeAgent/daiflow/blob/main/CHANGELOG.md"
-
 dependencies = [
     "fastapi>=0.110.0",
     "uvicorn[standard]>=0.29.0",
@@ -41,6 +35,12 @@ dependencies = [
     "click>=8.1.0",
     "cody-ai",
 ]
+
+[project.urls]
+Homepage = "https://github.com/CodyCodeAgent/daiflow"
+Repository = "https://github.com/CodyCodeAgent/daiflow"
+Issues = "https://github.com/CodyCodeAgent/daiflow/issues"
+Changelog = "https://github.com/CodyCodeAgent/daiflow/blob/main/CHANGELOG.md"
 
 [project.scripts]
 daiflow = "daiflow.cli:cli"
