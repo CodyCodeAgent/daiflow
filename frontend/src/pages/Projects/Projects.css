@@ -1,9 +1,4 @@
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 24px;
-}
+/* page-header base in global.css */
 
 .page-heading {
   font-size: 20px;

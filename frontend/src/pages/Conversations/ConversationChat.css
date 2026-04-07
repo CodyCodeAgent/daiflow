@@ -1,4 +1,6 @@
-.conversation-chat-page {
+/* ── Conversation Chat Page ── */
+
+.conv-chat-page {
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -10,15 +12,16 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 20px;
+  padding: 10px 20px;
   background: var(--bg-2);
   border-bottom: 1px solid var(--border);
   font-size: 13px;
   color: var(--t2);
+  flex-shrink: 0;
 }
 
 .conv-init-failed {
-  background: rgba(239, 68, 68, 0.08);
+  background: var(--red-d);
   color: var(--red);
 }
 
@@ -28,22 +31,129 @@
   border: 2px solid var(--border);
   border-top-color: var(--blue);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: conv-spin 0.8s linear infinite;
+  flex-shrink: 0;
 }
 
-@keyframes spin {
+@keyframes conv-spin {
   to { transform: rotate(360deg); }
 }
 
-.conversation-chat-body {
+.conv-chat-body {
   flex: 1;
   min-height: 0;
   display: flex;
-  flex-direction: column;
   overflow: hidden;
 }
 
-.conversation-chat-body .chat-panel {
-  flex: 1;
-  min-height: 0;
+/* ── Left: Project Context ── */
+
+.conv-context {
+  padding: 20px;
+  overflow-y: auto;
+  height: 100%;
+}
+
+.conv-context-section {
+  margin-bottom: 24px;
+}
+
+.conv-context-section:last-child {
+  margin-bottom: 0;
+}
+
+.conv-context-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--t2);
+  margin-bottom: 10px;
+}
+
+.conv-context-project-name {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.conv-context-desc {
+  font-size: 12px;
+  color: var(--t2);
+  line-height: 1.5;
+}
+
+/* ── Repos ── */
+
+.conv-context-repos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.conv-repo-item {
+  padding: 10px 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.conv-repo-type {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--blue);
+  background: var(--blue-d);
+  padding: 1px 6px;
+  border-radius: 3px;
+  width: fit-content;
+}
+
+.conv-repo-url {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--t1);
+  word-break: break-all;
+}
+
+.conv-repo-desc {
+  font-size: 11px;
+  color: var(--t3);
+}
+
+/* ── Skills ── */
+
+.conv-context-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.conv-skill-item {
+  padding: 5px 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.conv-skill-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--t1);
+}
+
+.conv-skill-desc {
+  font-size: 10px;
+  color: var(--t3);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

@@ -1,41 +1,4 @@
-.conv-form {
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  border-radius: var(--r2);
-  padding: 20px;
-  margin-bottom: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.conv-form .form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.conv-form .form-field label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--t2);
-}
-
-.conv-form .form-field input,
-.conv-form .form-field select {
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--r1);
-  background: var(--bg-1);
-  color: var(--t0);
-  font-size: 13px;
-}
-
-.conv-form .form-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
+/* ── Conversation List ── */
 
 .conv-list {
   display: flex;
@@ -60,11 +23,6 @@
   background: var(--bg-3);
 }
 
-.conv-left {
-  flex: 1;
-  min-width: 0;
-}
-
 .conv-name {
   font-size: 13px;
   font-weight: 600;
@@ -75,23 +33,29 @@
   display: flex;
   gap: 10px;
   align-items: center;
-  font-size: 11px;
-  color: var(--t3);
 }
 
 .conv-project {
+  font-family: var(--mono);
+  font-size: 11px;
   color: var(--t2);
   background: var(--bg-3);
   padding: 1px 8px;
   border-radius: 4px;
-  font-size: 11px;
 }
 
 .conv-desc {
+  font-size: 11px;
+  color: var(--t3);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 300px;
+}
+
+.conv-time {
+  font-size: 11px;
+  color: var(--t3);
 }
 
 .conv-right {
@@ -100,18 +64,34 @@
   gap: 12px;
 }
 
-.btn-icon-sm {
-  background: none;
-  border: none;
+/* ── Empty State ── */
+
+.conv-empty {
+  text-align: center;
+  padding: 60px 20px;
   color: var(--t3);
-  cursor: pointer;
-  font-size: 16px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  transition: all .15s;
 }
 
-.btn-icon-sm:hover {
-  color: var(--red);
-  background: var(--bg-3);
+.conv-empty-icon {
+  font-size: 36px;
+  margin-bottom: 12px;
+  opacity: 0.4;
+}
+
+.conv-empty p {
+  font-size: 13px;
+}
+
+/* ── Drawer (reuses Tasks drawer pattern) ── */
+
+.conv-drawer {
+  width: 440px;
+}
+
+.conv-drawer .field {
+  margin-bottom: 20px;
+}
+
+.conv-drawer .field:last-child {
+  margin-bottom: 0;
 }
