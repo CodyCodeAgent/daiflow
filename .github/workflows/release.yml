@@ -1,0 +1,147 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write  # required to create GitHub Release and upload assets
+
+jobs:
+  # ── macOS (arm64 + x64, with optional notarization) ────────────────────────
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: electron/package-lock.json
+
+      - name: Install Electron deps
+        run: cd electron && npm ci
+
+      - name: Download bundled Python runtimes
+        run: bash electron/scripts/download-python.sh
+
+      - name: Build frontend
+        run: cd frontend && npm ci && npm run build
+
+      - name: Package (macOS)
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # P12 code-signing certificate (optional — unsigned build still works locally)
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        run: cd electron && npm run dist:mac
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-dist
+          path: |
+            electron/dist/*.dmg
+            electron/dist/*.zip
+          if-no-files-found: error
+
+  # ── Windows (x64 NSIS installer) ───────────────────────────────────────────
+  build-win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: electron/package-lock.json
+
+      - name: Install Electron deps
+        run: cd electron && npm ci
+
+      - name: Build frontend
+        run: cd frontend && npm ci && npm run build
+
+      - name: Package (Windows)
+        # download-python.sh only downloads macOS runtimes;
+        # Windows build skips that step and relies on user-installed Python.
+        run: cd electron && npx electron-builder --win --publish never
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-dist
+          path: electron/dist/*.exe
+          if-no-files-found: error
+
+  # ── Linux (AppImage + deb, x64) ────────────────────────────────────────────
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: electron/package-lock.json
+
+      - name: Install Electron deps
+        run: cd electron && npm ci
+
+      - name: Build frontend
+        run: cd frontend && npm ci && npm run build
+
+      - name: Package (Linux)
+        run: cd electron && npx electron-builder --linux --publish never
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-dist
+          path: |
+            electron/dist/*.AppImage
+            electron/dist/*.deb
+          if-no-files-found: error
+
+  # ── Create GitHub Release ───────────────────────────────────────────────────
+  release:
+    needs: [build-mac, build-win, build-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Extract changelog for this version
+        id: changelog
+        run: |
+          # Pull the section for this release from CHANGELOG.md
+          awk "/^## \[${{ steps.version.outputs.version }}\]/{found=1; next} /^## \[/{if(found) exit} found{print}" CHANGELOG.md > release_notes.txt
+          echo "notes<<EOF" >> "$GITHUB_OUTPUT"
+          cat release_notes.txt >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: DaiFlow v${{ steps.version.outputs.version }}
+          body: ${{ steps.changelog.outputs.notes }}
+          files: dist/**/*
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
